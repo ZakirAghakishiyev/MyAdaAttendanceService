@@ -1,0 +1,6 @@
+@MyAdaAttendanceService_HostAddress = http://localhost:5044
+
+GET {{MyAdaAttendanceService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

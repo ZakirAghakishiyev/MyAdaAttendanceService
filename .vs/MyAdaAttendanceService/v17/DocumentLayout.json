@@ -1,0 +1,79 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B169C814-F4DA-436E-9A62-9797DB3AF41B}|MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj|c:\\users\\user\\source\\repos\\myadaattendanceservice\\myadaattendanceservice.infrastructure\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B169C814-F4DA-436E-9A62-9797DB3AF41B}|MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj|solutionrelative:myadaattendanceservice.infrastructure\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1262E64A-1B4F-4A06-9B9E-FCAC2D468B7F}|MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj|c:\\users\\user\\source\\repos\\myadaattendanceservice\\myadaattendanceservice.core\\myadaattendanceservice.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{1262E64A-1B4F-4A06-9B9E-FCAC2D468B7F}|MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj|solutionrelative:myadaattendanceservice.core\\myadaattendanceservice.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1262E64A-1B4F-4A06-9B9E-FCAC2D468B7F}|MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj|c:\\users\\user\\source\\repos\\myadaattendanceservice\\myadaattendanceservice.core\\entities\\lesson.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1262E64A-1B4F-4A06-9B9E-FCAC2D468B7F}|MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj|solutionrelative:myadaattendanceservice.core\\entities\\lesson.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MyAdaAttendanceService.Core",
+              "DocumentMoniker": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj",
+              "RelativeDocumentMoniker": "MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj",
+              "ToolTip": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj",
+              "RelativeToolTip": "MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-05T12:36:42.052Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "MyAdaAttendanceService.Infrastructure\\AppDbContext.cs",
+              "ToolTip": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\AppDbContext.cs",
+              "RelativeToolTip": "MyAdaAttendanceService.Infrastructure\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-05T12:35:14.154Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Lesson.cs",
+              "DocumentMoniker": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\Entities\\Lesson.cs",
+              "RelativeDocumentMoniker": "MyAdaAttendanceService.Core\\Entities\\Lesson.cs",
+              "ToolTip": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\Entities\\Lesson.cs",
+              "RelativeToolTip": "MyAdaAttendanceService.Core\\Entities\\Lesson.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-05T12:32:08.798Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
