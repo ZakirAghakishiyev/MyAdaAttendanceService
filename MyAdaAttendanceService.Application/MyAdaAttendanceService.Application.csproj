@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyAdaAttendanceService.Core\MyAdaAttendanceService.Core.csproj" />
+    <ProjectReference Include="..\MyAdaAttendanceService.Infrastructure\MyAdaAttendanceService.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
