@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MyAdaAttendanceService.Core.Entities;
 using MyAdaAttendanceService.Core.Interfaces;
 
@@ -28,5 +28,11 @@ public class LessonRepository : EfCoreRepository<Lesson>, ILessonRepository
         return await _dbSet
             .Where(l => l.Enrollments.Any(e => e.StudentId == studentId))
             .ToListAsync();
+    }
+
+    public async Task<bool> ExistsAsync(int studentId, int lessonId)
+    {
+        return await _dbSet
+            .AnyAsync(l => l.Id == lessonId && l.Enrollments.Any(e => e.StudentId == studentId));
     }
 }

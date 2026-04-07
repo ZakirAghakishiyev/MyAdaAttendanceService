@@ -9,8 +9,14 @@ public interface ILessonSessionRepository : IRepository<LessonSession>
 
     Task<LessonSession?> GetByIdWithLessonAsync(int sessionId);
 
+    Task<LessonSession?> GetByIdWithAttendancesAsync(int sessionId);
+
+    Task<LessonSession?> GetInstructorSessionAsync(int instructorId, int sessionId);
+
     Task<List<LessonSession>> GetUpcomingSessionsAsync(int lessonId, DateTime now);
 
     Task<List<LessonSession>> GetPastSessionsAsync(int lessonId, DateTime now);
+
+    Task<LessonSession?> GetActiveAttendanceSessionAsync(int lessonId);
 }
 

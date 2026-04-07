@@ -4,15 +4,13 @@ namespace MyAdaAttendanceService.Application.Services.Interfaces;
 
 public interface IAttendanceService
 {
-    // Instructor view
     Task<IEnumerable<AttendanceDto>> GetSessionAttendanceAsync(int instructorId, int sessionId);
 
-    // QR scan (student)
-    Task MarkAttendanceByQrAsync(int studentId, int sessionId);
+    Task<AttendanceSummaryDto> GetSessionAttendanceSummaryAsync(int instructorId, int sessionId);
 
-    // Manual adjustment (Instructor)
-    Task UpdateAttendanceAsync(int instructorId, int attendanceId, UpdateAttendanceDto dto);
+    Task<QrScanResponseDto> MarkAttendanceByQrAsync(int studentId, QrScanRequestDto dto);
 
-    // Optional: bulk operations
+    Task<AttendanceDto> UpdateAttendanceAsync(int instructorId, int attendanceId, UpdateAttendanceDto dto);
+
     Task BulkMarkAbsentAsync(int instructorId, int sessionId);
 }

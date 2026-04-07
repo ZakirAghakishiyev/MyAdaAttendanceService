@@ -8,6 +8,11 @@ public class SessionAttendance
     public int StudentId { get; set; }
 
     public AttendanceStatus Status { get; set; }
+    public DateTime? FirstScanAt { get; set; }
+    public DateTime? LastScanAt { get; set; }
+
+    public bool IsManuallyAdjusted { get; set; }
+    public string? InstructorNote { get; set; }
 
     public LessonSession? Session { get; set; }
 }

@@ -3,7 +3,6 @@
 public class AttendanceSummaryDto
 {
     public int SessionId { get; set; }
-
     public int TotalStudents { get; set; }
     public int PresentCount { get; set; }
     public int LateCount { get; set; }

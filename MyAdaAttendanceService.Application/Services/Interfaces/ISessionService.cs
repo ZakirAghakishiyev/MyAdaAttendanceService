@@ -1,7 +1,6 @@
 ﻿using MyAdaAttendanceService.Application.DTOs;
 
 namespace MyAdaAttendanceService.Application.Services.Interfaces;
-
 public interface ISessionService
 {
     Task<IEnumerable<SessionDto>> GetSessionsByLessonAsync(int instructorId, int lessonId);
@@ -10,7 +9,11 @@ public interface ISessionService
 
     Task<SessionDto> CreateSessionAsync(int instructorId, CreateSessionDto dto);
 
-    Task ActivateAttendanceAsync(int instructorId, int sessionId);
+    Task<SessionDto> UpdateSessionAsync(int instructorId, int sessionId, UpdateSessionDto dto);
 
-    Task DeactivateAttendanceAsync(int instructorId, int sessionId);
+    Task DeleteSessionAsync(int instructorId, int sessionId);
+
+    Task<AttendanceActivationResultDto> ActivateAttendanceAsync(int instructorId, int sessionId);
+
+    Task<AttendanceActivationResultDto> DeactivateAttendanceAsync(int instructorId, int sessionId);
 }

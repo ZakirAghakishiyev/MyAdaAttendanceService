@@ -1,4 +1,4 @@
-﻿using MyAdaAttendanceService.Core.Entities;
+using MyAdaAttendanceService.Core.Entities;
 
 namespace MyAdaAttendanceService.Core.Interfaces;
 
@@ -9,4 +9,6 @@ public interface ILessonRepository : IRepository<Lesson>
     Task<Lesson?> GetByIdWithDetailsAsync(int lessonId);
 
     Task<List<Lesson>> GetStudentLessonsAsync(int studentId);
+
+    Task<bool> ExistsAsync(int studentId, int lessonId);
 }

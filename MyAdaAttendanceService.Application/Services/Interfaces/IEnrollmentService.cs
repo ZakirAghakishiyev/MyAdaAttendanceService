@@ -7,4 +7,6 @@ public interface IEnrollmentService
     Task<bool> IsStudentEnrolledAsync(int studentId, int lessonId);
 
     Task<IEnumerable<StudentDto>> GetStudentsByLessonAsync(int lessonId);
+
+    Task<IEnumerable<EnrollmentDto>> GetEnrollmentsByLessonAsync(int lessonId);
 }

@@ -3,7 +3,6 @@
 public class SessionDto
 {
     public int Id { get; set; }
-
     public int LessonId { get; set; }
     public string LessonName { get; set; } = string.Empty;
 
@@ -11,7 +10,6 @@ public class SessionDto
     public DateTime EndTime { get; set; }
 
     public string? Topic { get; set; }
-
     public bool IsAttendanceActive { get; set; }
     public DateTime? AttendanceActivatedAt { get; set; }
     public DateTime? AttendanceDeactivatedAt { get; set; }

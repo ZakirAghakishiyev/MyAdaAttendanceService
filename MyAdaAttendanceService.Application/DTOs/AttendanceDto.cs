@@ -1,11 +1,8 @@
-﻿using MyAdaAttendanceService.Core.Entities;
-
-namespace MyAdaAttendanceService.Application.DTOs;
+﻿namespace MyAdaAttendanceService.Application.DTOs;
 
 public class AttendanceDto
 {
     public int Id { get; set; }
-
     public int SessionId { get; set; }
     public int LessonId { get; set; }
 
@@ -13,7 +10,7 @@ public class AttendanceDto
     public string StudentFullName { get; set; } = string.Empty;
     public string StudentCode { get; set; } = string.Empty;
 
-    public AttendanceStatus Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     public DateTime? FirstScanAt { get; set; }
     public DateTime? LastScanAt { get; set; }

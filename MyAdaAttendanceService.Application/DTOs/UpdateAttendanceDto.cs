@@ -1,10 +1,7 @@
-﻿using MyAdaAttendanceService.Core.Entities;
-
-namespace MyAdaAttendanceService.Application.DTOs;
+﻿namespace MyAdaAttendanceService.Application.DTOs;
 
 public class UpdateAttendanceDto
 {
-    public AttendanceStatus Status { get; set; }
-
+    public string Status { get; set; } = string.Empty;
     public string? InstructorNote { get; set; }
 }
