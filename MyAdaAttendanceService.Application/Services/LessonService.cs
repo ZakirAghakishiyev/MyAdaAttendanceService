@@ -1,4 +1,4 @@
-﻿using MyAdaAttendanceService.Application.DTOs;
+using MyAdaAttendanceService.Application.DTOs;
 using MyAdaAttendanceService.Application.Services.Interfaces;
 using MyAdaAttendanceService.Core.Entities;
 using MyAdaAttendanceService.Core.Interfaces;
@@ -18,41 +18,22 @@ public class LessonService : ILessonService
     {
         var lessons = await _lessonRepository.GetByInstructorIdAsync(instructorId);
 
-        var result = new List<LessonDto>();
-
-        foreach (var lesson in lessons)
+        return lessons.Select(l => new LessonDto
         {
-            var detailedLesson = await _lessonRepository.GetByIdWithDetailsAsync(lesson.Id);
-
-            result.Add(new LessonDto
-            {
-                Id = lesson.Id,
-                Name = lesson.Name,
-                Code = lesson.Code,
-                InstructorId = lesson.InstructorId,
-                Sessions = detailedLesson?.Sessions?
-                    .OrderBy(x => x.Date)
-                    .ThenBy(x => x.StartTime)
-                    .Select(x => new SessionShortDto
-                    {
-                        Id = x.Id,
-                        Date = x.Date,
-                        StartTime = x.StartTime,
-                        EndTime = x.EndTime
-                    })
-                    .ToList()
-            });
-        }
-
-        return result;
+            Id = l.Id,
+            Name = l.Name,
+            Code = l.Code,
+            InstructorId = l.InstructorId
+        });
     }
 
     public async Task<LessonDto> GetMyLessonByIdAsync(int instructorId, int lessonId)
     {
-        var lesson = await _lessonRepository.GetByIdWithDetailsAsync(lessonId);
+        var lesson = await _lessonRepository.GetByIdWithDetailsAsync(lessonId)
+            ?? throw new KeyNotFoundException($"Lesson {lessonId} not found.");
 
-        if (lesson == null || lesson.InstructorId != instructorId)
-            throw new KeyNotFoundException("Lesson was not found.");
+        if (lesson.InstructorId != instructorId)
+            throw new UnauthorizedAccessException("You do not own this lesson.");
 
         return new LessonDto
         {
@@ -60,177 +41,96 @@ public class LessonService : ILessonService
             Name = lesson.Name,
             Code = lesson.Code,
             InstructorId = lesson.InstructorId,
-            Sessions = lesson.Sessions?
-                .OrderBy(x => x.Date)
-                .ThenBy(x => x.StartTime)
-                .Select(x => new SessionShortDto
+            Sessions = lesson.Sessions
+                .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
+                .Select(s => new SessionShortDto
                 {
-                    Id = x.Id,
-                    Date = x.Date,
-                    StartTime = x.StartTime,
-                    EndTime = x.EndTime
-                })
-                .ToList()
+                    Id = s.Id,
+                    Date = s.Date,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime,
+                    Topic = s.Topic,
+                    IsAttendanceActive = s.IsAttendanceActive
+                }).ToList()
         };
     }
-}
 
-
-
-public class EnrollmentService : IEnrollmentService
-{
-    private readonly ILessonEnrollmentRepository _enrollmentRepository;
-    private readonly IStudentDirectoryService _studentDirectoryService;
-
-    public EnrollmentService(
-        ILessonEnrollmentRepository enrollmentRepository,
-        IStudentDirectoryService studentDirectoryService)
+    public async Task<IEnumerable<LessonDto>> GetAllLessonsAsync()
     {
-        _enrollmentRepository = enrollmentRepository;
-        _studentDirectoryService = studentDirectoryService;
-    }
+        var lessons = await _lessonRepository.GetAllAsync(orderBy: q => q.OrderBy(l => l.Id));
 
-    public async Task<bool> IsStudentEnrolledAsync(int studentId, int lessonId)
-    {
-        return await _enrollmentRepository.ExistsAsync(lessonId, studentId);
-    }
-
-    public async Task<IEnumerable<StudentDto>> GetStudentsByLessonAsync(int lessonId)
-    {
-        var enrollments = await _enrollmentRepository.GetByLessonIdAsync(lessonId);
-        var studentIds = enrollments.Select(x => x.StudentId).Distinct().ToList();
-
-        var students = await _studentDirectoryService.GetStudentsByIdsAsync(studentIds);
-
-        return studentIds
-            .Where(id => students.ContainsKey(id))
-            .Select(id => students[id])
-            .ToList();
-    }
-}
-
-
-public class AttendanceService : IAttendanceService
-{
-    private readonly ISessionAttendanceRepository _attendanceRepository;
-    private readonly ILessonSessionRepository _sessionRepository;
-    private readonly ILessonEnrollmentRepository _enrollmentRepository;
-    private readonly IStudentDirectoryService _studentDirectoryService;
-
-    public AttendanceService(
-        ISessionAttendanceRepository attendanceRepository,
-        ILessonSessionRepository sessionRepository,
-        ILessonEnrollmentRepository enrollmentRepository,
-        IStudentDirectoryService studentDirectoryService)
-    {
-        _attendanceRepository = attendanceRepository;
-        _sessionRepository = sessionRepository;
-        _enrollmentRepository = enrollmentRepository;
-        _studentDirectoryService = studentDirectoryService;
-    }
-
-    public async Task<IEnumerable<AttendanceDto>> GetSessionAttendanceAsync(int instructorId, int sessionId)
-    {
-        var session = await _sessionRepository.GetByIdWithLessonAsync(sessionId);
-
-        if (session == null || session.Lesson == null || session.Lesson.InstructorId != instructorId)
-            throw new KeyNotFoundException("Session was not found.");
-
-        var attendances = await _attendanceRepository.GetBySessionIdAsync(sessionId);
-        var studentIds = attendances.Select(x => x.StudentId).Distinct().ToList();
-        var students = await _studentDirectoryService.GetStudentsByIdsAsync(studentIds);
-
-        return attendances.Select(a =>
+        return lessons.Select(l => new LessonDto
         {
-            students.TryGetValue(a.StudentId, out var student);
-
-            return new AttendanceDto
-            {
-                Id = a.Id,
-                SessionId = a.SessionId,
-                LessonId = session.LessonId,
-                StudentId = a.StudentId,
-                StudentFullName = student?.FullName ?? string.Empty,
-                StudentCode = student?.StudentCode ?? string.Empty,
-                Status = a.Status,
-                FirstScanAt = null,
-                LastScanAt = null,
-                IsManuallyAdjusted = false,
-                InstructorNote = null
-            };
-        }).ToList();
+            Id = l.Id,
+            Name = l.Name,
+            Code = l.Code,
+            InstructorId = l.InstructorId
+        });
     }
 
-    public async Task MarkAttendanceByQrAsync(int studentId, int sessionId)
+    public async Task<LessonDto> GetLessonByIdAsync(int lessonId)
     {
-        var session = await _sessionRepository.GetByIdWithLessonAsync(sessionId);
+        var lesson = await _lessonRepository.GetByIdWithDetailsAsync(lessonId)
+            ?? throw new KeyNotFoundException($"Lesson {lessonId} not found.");
 
-        if (session == null || session.Lesson == null)
-            throw new KeyNotFoundException("Session was not found.");
-
-        var isEnrolled = await _enrollmentRepository.ExistsAsync(session.LessonId, studentId);
-
-        if (!isEnrolled)
-            throw new InvalidOperationException("Student is not enrolled in this lesson.");
-
-        var attendance = await _attendanceRepository.GetBySessionAndStudentAsync(sessionId, studentId);
-
-        if (attendance == null)
+        return new LessonDto
         {
-            attendance = new SessionAttendance
-            {
-                SessionId = sessionId,
-                StudentId = studentId,
-                Status = AttendanceStatus.Present
-            };
-
-            await _attendanceRepository.AddAsync(attendance);
-        }
-        else
-        {
-            attendance.Status = AttendanceStatus.Present;
-            await _attendanceRepository.UpdateAsync(attendance);
-        }
-    }
-
-    public async Task UpdateAttendanceAsync(int instructorId, int attendanceId, UpdateAttendanceDto dto)
-    {
-        var attendance = await _attendanceRepository.GetAsync(
-            x => x.Id == attendanceId,
-            include: q => q);
-
-        var session = await _sessionRepository.GetByIdWithLessonAsync(attendance.SessionId);
-
-        if (session == null || session.Lesson == null || session.Lesson.InstructorId != instructorId)
-            throw new UnauthorizedAccessException("You do not have access to this attendance.");
-
-        attendance.Status = dto.Status;
-        await _attendanceRepository.UpdateAsync(attendance);
-    }
-
-    public async Task BulkMarkAbsentAsync(int instructorId, int sessionId)
-    {
-        var session = await _sessionRepository.GetByIdWithLessonAsync(sessionId);
-
-        if (session == null || session.Lesson == null || session.Lesson.InstructorId != instructorId)
-            throw new KeyNotFoundException("Session was not found.");
-
-        var enrollments = await _enrollmentRepository.GetByLessonIdAsync(session.LessonId);
-        var existingAttendances = await _attendanceRepository.GetBySessionIdAsync(sessionId);
-
-        var existingStudentIds = existingAttendances.Select(x => x.StudentId).ToHashSet();
-
-        foreach (var enrollment in enrollments)
-        {
-            if (!existingStudentIds.Contains(enrollment.StudentId))
-            {
-                await _attendanceRepository.AddAsync(new SessionAttendance
+            Id = lesson.Id,
+            Name = lesson.Name,
+            Code = lesson.Code,
+            InstructorId = lesson.InstructorId,
+            Sessions = lesson.Sessions
+                .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
+                .Select(s => new SessionShortDto
                 {
-                    SessionId = sessionId,
-                    StudentId = enrollment.StudentId,
-                    Status = AttendanceStatus.Absent
-                });
-            }
-        }
+                    Id = s.Id,
+                    Date = s.Date,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime,
+                    Topic = s.Topic,
+                    IsAttendanceActive = s.IsAttendanceActive
+                }).ToList()
+        };
+    }
+
+    public async Task<LessonDto> CreateLessonAsync(CreateLessonDto dto)
+    {
+        if (dto.InstructorId <= 0)
+            throw new ArgumentException("InstructorId is required and must be positive.");
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            throw new ArgumentException("Lesson name is required.");
+        if (string.IsNullOrWhiteSpace(dto.Code))
+            throw new ArgumentException("Lesson code is required.");
+        if (dto.Credits < 0)
+            throw new ArgumentException("Credits cannot be negative.");
+        if (dto.TimesPerWeek < 0)
+            throw new ArgumentException("Times per week cannot be negative.");
+        if (dto.Capacity < 0)
+            throw new ArgumentException("Capacity cannot be negative.");
+
+        var lesson = new Lesson
+        {
+            InstructorId = dto.InstructorId,
+            RoomId = dto.RoomId,
+            Semester = dto.Semester.Trim(),
+            CRN = dto.CRN.Trim(),
+            Name = dto.Name.Trim(),
+            Type = dto.Type.Trim(),
+            Department = dto.Department.Trim(),
+            Code = dto.Code.Trim(),
+            Credits = dto.Credits,
+            TimesPerWeek = dto.TimesPerWeek,
+            Capacity = dto.Capacity
+        };
+
+        await _lessonRepository.AddAsync(lesson);
+
+        return new LessonDto
+        {
+            Id = lesson.Id,
+            Name = lesson.Name,
+            Code = lesson.Code,
+            InstructorId = lesson.InstructorId
+        };
     }
 }

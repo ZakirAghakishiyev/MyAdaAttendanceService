@@ -22,32 +22,28 @@ public class InstructorLessonsController : ApiControllerBase
     public async Task<IActionResult> GetMyLessons()
     {
         var instructorId = GetCurrentUserId();
-        var lessons = await _lessonService.GetMyLessonsAsync(instructorId);
-        return Ok(lessons);
+        return await HandleAsync(() => _lessonService.GetMyLessonsAsync(instructorId));
     }
 
     [HttpGet("{lessonId:int}")]
     public async Task<IActionResult> GetMyLesson(int lessonId)
     {
         var instructorId = GetCurrentUserId();
-        var lesson = await _lessonService.GetMyLessonByIdAsync(instructorId, lessonId);
-        return Ok(lesson);
+        return await HandleAsync(() => _lessonService.GetMyLessonByIdAsync(instructorId, lessonId));
     }
 
     [HttpGet("{lessonId:int}/sessions")]
     public async Task<IActionResult> GetSessions(int lessonId)
     {
         var instructorId = GetCurrentUserId();
-        var sessions = await _sessionService.GetSessionsByLessonAsync(instructorId, lessonId);
-        return Ok(sessions);
+        return await HandleAsync(() => _sessionService.GetSessionsByLessonAsync(instructorId, lessonId));
     }
 
     [HttpGet("{lessonId:int}/sessions/{sessionId:int}")]
     public async Task<IActionResult> GetSession(int lessonId, int sessionId)
     {
         var instructorId = GetCurrentUserId();
-        var session = await _sessionService.GetSessionByIdAsync(instructorId, sessionId);
-        return Ok(session);
+        return await HandleAsync(() => _sessionService.GetSessionByIdAsync(instructorId, sessionId));
     }
 
     [HttpPost("{lessonId:int}/sessions")]
@@ -55,23 +51,22 @@ public class InstructorLessonsController : ApiControllerBase
     {
         var instructorId = GetCurrentUserId();
         dto.LessonId = lessonId;
-        var session = await _sessionService.CreateSessionAsync(instructorId, dto);
-        return CreatedAtAction(nameof(GetSession), new { lessonId, sessionId = session.Id }, session);
+        return await HandleAsync(
+            () => _sessionService.CreateSessionAsync(instructorId, dto),
+            session => CreatedAtAction(nameof(GetSession), new { lessonId, sessionId = session.Id }, session));
     }
 
     [HttpPatch("{lessonId:int}/sessions/{sessionId:int}")]
     public async Task<IActionResult> UpdateSession(int lessonId, int sessionId, [FromBody] UpdateSessionDto dto)
     {
         var instructorId = GetCurrentUserId();
-        var session = await _sessionService.UpdateSessionAsync(instructorId, sessionId, dto);
-        return Ok(session);
+        return await HandleAsync(() => _sessionService.UpdateSessionAsync(instructorId, sessionId, dto));
     }
 
     [HttpDelete("{lessonId:int}/sessions/{sessionId:int}")]
     public async Task<IActionResult> DeleteSession(int lessonId, int sessionId)
     {
         var instructorId = GetCurrentUserId();
-        await _sessionService.DeleteSessionAsync(instructorId, sessionId);
-        return NoContent();
+        return await HandleAsync(() => _sessionService.DeleteSessionAsync(instructorId, sessionId));
     }
 }

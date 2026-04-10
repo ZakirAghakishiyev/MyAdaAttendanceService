@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAdaAttendanceService.Appl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAdaAttendanceService.Web", "MyAdaAttendanceService.Web\MyAdaAttendanceService.Web.csproj", "{34DDEDB8-5B1F-48A4-B9B5-C4DE2CA3AE9D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BE2A8A0E-1666-453E-A9CB-141D4E4C26B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +40,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1262E64A-1B4F-4A06-9B9E-FCAC2D468B7F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B169C814-F4DA-436E-9A62-9797DB3AF41B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1C463D21-FBF8-4259-A3E3-993C0C6FEE59} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{34DDEDB8-5B1F-48A4-B9B5-C4DE2CA3AE9D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7B819753-CD40-49DE-84B1-334C8CF322A7}

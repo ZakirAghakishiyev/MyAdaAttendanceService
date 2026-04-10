@@ -1,4 +1,4 @@
-﻿namespace MyAdaAttendanceService.Application.DTOs;
+namespace MyAdaAttendanceService.Application.DTOs;
 
 public class AttendanceDto
 {
@@ -11,6 +11,10 @@ public class AttendanceDto
     public string StudentCode { get; set; } = string.Empty;
 
     public string Status { get; set; } = string.Empty;
+    public DateTime? MarkedAt { get; set; }
+    public string? MarkedSource { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public int? UpdatedBy { get; set; }
 
     public DateTime? FirstScanAt { get; set; }
     public DateTime? LastScanAt { get; set; }

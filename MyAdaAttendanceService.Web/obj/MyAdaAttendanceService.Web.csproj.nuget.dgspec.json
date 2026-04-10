@@ -10,7 +10,7 @@
         "projectUniqueName": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Application\\MyAdaAttendanceService.Application.csproj",
         "projectName": "MyAdaAttendanceService.Application",
         "projectPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Application\\MyAdaAttendanceService.Application.csproj",
-        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\User\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dc5786c6744d35278546222380571935\\nuget",
         "outputPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -51,7 +51,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -72,7 +72,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -82,7 +82,7 @@
         "projectUniqueName": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj",
         "projectName": "MyAdaAttendanceService.Core",
         "projectPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\MyAdaAttendanceService.Core.csproj",
-        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\User\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dc5786c6744d35278546222380571935\\nuget",
         "outputPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -116,7 +116,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -159,7 +159,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -169,7 +169,7 @@
         "projectUniqueName": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
         "projectName": "MyAdaAttendanceService.Infrastructure",
         "projectPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\User\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dc5786c6744d35278546222380571935\\nuget",
         "outputPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -207,7 +207,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -222,6 +222,22 @@
               "version": "[12.0.0, )"
             },
             "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[8.0.0, )"
             }
@@ -242,7 +258,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -252,7 +268,7 @@
         "projectUniqueName": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Web\\MyAdaAttendanceService.Web.csproj",
         "projectName": "MyAdaAttendanceService.Web",
         "projectPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Web\\MyAdaAttendanceService.Web.csproj",
-        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\User\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dc5786c6744d35278546222380571935\\nuget",
         "outputPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Web\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -296,12 +312,30 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AutoWrapper.Core": {
+              "target": "Package",
+              "version": "[4.5.1, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[*, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.6.2, )"
@@ -326,7 +360,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

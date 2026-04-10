@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MyAdaAttendanceService.Core.Entities;
 using MyAdaAttendanceService.Core.Interfaces;
 
@@ -37,5 +37,24 @@ public class SessionAttendanceRepository : EfCoreRepository<SessionAttendance>, 
     {
         return await _dbSet
             .CountAsync(x => x.SessionId == sessionId);
+    }
+
+    public async Task<int> CountBySessionIdAndStatusAsync(int sessionId, AttendanceStatus status)
+    {
+        return await _dbSet
+            .CountAsync(x => x.SessionId == sessionId && x.Status == status);
+    }
+
+    public async Task<bool> ExistsAsync(int sessionId, int studentId)
+    {
+        return await _dbSet
+            .AnyAsync(x => x.SessionId == sessionId && x.StudentId == studentId);
+    }
+
+    public async Task<List<SessionAttendance>> GetManuallyAdjustedBySessionIdAsync(int sessionId)
+    {
+        return await _dbSet
+            .Where(x => x.SessionId == sessionId && x.IsManuallyAdjusted)
+            .ToListAsync();
     }
 }

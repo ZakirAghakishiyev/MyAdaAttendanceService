@@ -4,3 +4,12 @@ C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\ob
 C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\MyAdaAttendanceService.Core.AssemblyInfo.cs
 C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\MyAdaAttendanceService.Core.csproj.CoreCompileInputs.cache
 C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\MyAdaAttendanceService.Core.sourcelink.json
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\bin\Debug\net8.0\MyAdaAttendanceService.Core.deps.json
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\bin\Debug\net8.0\MyAdaAttendanceService.Core.runtimeconfig.json
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\bin\Debug\net8.0\MyAdaAttendanceService.Core.dll
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\bin\Debug\net8.0\MyAdaAttendanceService.Core.pdb
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\MyAdaAttendanceService.Core.dll
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\refint\MyAdaAttendanceService.Core.dll
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\MyAdaAttendanceService.Core.pdb
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\MyAdaAttendanceService.Core.genruntimeconfig.cache
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Core\obj\Debug\net8.0\ref\MyAdaAttendanceService.Core.dll

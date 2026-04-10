@@ -1,9 +1,11 @@
-﻿using MyAdaAttendanceService.Application.DTOs;
+using MyAdaAttendanceService.Application.DTOs;
 
 namespace MyAdaAttendanceService.Application.Services.Interfaces;
 public interface ISessionService
 {
     Task<IEnumerable<SessionDto>> GetSessionsByLessonAsync(int instructorId, int lessonId);
+
+    Task<IEnumerable<SessionDto>> GetSessionsByLessonAdminAsync(int lessonId);
 
     Task<SessionDto> GetSessionByIdAsync(int instructorId, int sessionId);
 

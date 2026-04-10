@@ -1,4 +1,4 @@
-﻿namespace MyAdaAttendanceService.Core.Entities;
+namespace MyAdaAttendanceService.Core.Entities;
 
 public class SessionAttendance
 {
@@ -8,6 +8,10 @@ public class SessionAttendance
     public int StudentId { get; set; }
 
     public AttendanceStatus Status { get; set; }
+    public DateTime? MarkedAt { get; set; }
+    public AttendanceMarkedSource MarkedSource { get; set; } = AttendanceMarkedSource.QR;
+    public DateTime? UpdatedAt { get; set; }
+    public int? UpdatedBy { get; set; }
     public DateTime? FirstScanAt { get; set; }
     public DateTime? LastScanAt { get; set; }
 

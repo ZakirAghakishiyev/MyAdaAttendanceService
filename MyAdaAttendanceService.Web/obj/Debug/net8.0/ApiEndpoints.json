@@ -1,0 +1,440 @@
+[
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AdminController",
+    "Method": "GetLessonsByInstructor",
+    "RelativePath": "api/admin/instructors/{instructorId}/lessons",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "instructorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AdminController",
+    "Method": "CreateLesson",
+    "RelativePath": "api/admin/lessons",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.CreateLessonDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AdminController",
+    "Method": "GetSessionsByLesson",
+    "RelativePath": "api/admin/lessons/{lessonId}/sessions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AdminController",
+    "Method": "GetSessionAttendance",
+    "RelativePath": "api/admin/sessions/{sessionId}/attendance",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AdminController",
+    "Method": "CorrectAttendance",
+    "RelativePath": "api/admin/sessions/{sessionId}/attendance/{attendanceId}",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "attendanceId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.AdminAttendanceCorrectionDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AdminController",
+    "Method": "DeleteAttendance",
+    "RelativePath": "api/admin/sessions/{sessionId}/attendance/{attendanceId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "attendanceId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.AttendanceController",
+    "Method": "ScanQr",
+    "RelativePath": "api/attendance/qr/scan",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.QrScanRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "GetMyLessons",
+    "RelativePath": "api/instructors/me/lessons",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "GetMyLesson",
+    "RelativePath": "api/instructors/me/lessons/{lessonId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "GetSessions",
+    "RelativePath": "api/instructors/me/lessons/{lessonId}/sessions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "CreateSession",
+    "RelativePath": "api/instructors/me/lessons/{lessonId}/sessions",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.CreateSessionDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "GetSession",
+    "RelativePath": "api/instructors/me/lessons/{lessonId}/sessions/{sessionId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "UpdateSession",
+    "RelativePath": "api/instructors/me/lessons/{lessonId}/sessions/{sessionId}",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.UpdateSessionDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorLessonsController",
+    "Method": "DeleteSession",
+    "RelativePath": "api/instructors/me/lessons/{lessonId}/sessions/{sessionId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "GetAttendance",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "UpdateAttendance",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance/{studentId}",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "studentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.UpdateAttendanceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "ActivateAttendance",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance/activate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "BulkMarkAbsent",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance/bulk-absent",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "DeactivateAttendance",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance/deactivate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "FinalizeAttendance",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance/finalize",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "GetAttendanceSummary",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/attendance/summary",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.InstructorSessionsController",
+    "Method": "IssueQrToken",
+    "RelativePath": "api/instructors/me/sessions/{sessionId}/qr-token",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.StudentController",
+    "Method": "ScanAttendance",
+    "RelativePath": "api/students/me/attendance/scan",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "MyAdaAttendanceService.Application.DTOs.QrScanRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.StudentController",
+    "Method": "GetMyEnrollments",
+    "RelativePath": "api/students/me/enrollments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MyAdaAttendanceService.Web.Controllers.StudentController",
+    "Method": "GetMyAttendanceByLesson",
+    "RelativePath": "api/students/me/lessons/{lessonId}/attendance",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lessonId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

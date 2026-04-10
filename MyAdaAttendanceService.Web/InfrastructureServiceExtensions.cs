@@ -22,6 +22,8 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<ILessonEnrollmentRepository, LessonEnrollmentRepository>();
         services.AddScoped<ILessonSessionRepository, LessonSessionRepository>();
         services.AddScoped<ISessionAttendanceRepository, SessionAttendanceRepository>();
+        services.AddScoped<IAttendanceActivationRepository, AttendanceActivationRepository>();
+        services.AddScoped<IAttendanceScanLogRepository, AttendanceScanLogRepository>();
         services.AddScoped<ILessonTimeRepository, LessonTimeRepository>();
         //services.AddScoped<ITimeslotRepository, TimeslotRepository>();
         return services;

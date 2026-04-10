@@ -1,8 +1,6 @@
-﻿using MyAdaAttendanceService.Application.DTOs;
-using MyAdaAttendanceService.Application.Services.Interfaces;
+using MyAdaAttendanceService.Application.DTOs;
 using MyAdaAttendanceService.Core.Entities;
 using MyAdaAttendanceService.Core.Interfaces;
-using MyAdaAttendanceService.Infrastructure.Repositories;
 
 namespace MyAdaAttendanceService.Application.Services;
 
@@ -10,13 +8,16 @@ public class StudentAttendanceService : IStudentAttendanceService
 {
     private readonly ILessonRepository _lessonRepository;
     private readonly ISessionAttendanceRepository _attendanceRepository;
+    private readonly ILessonSessionRepository _sessionRepository;
 
     public StudentAttendanceService(
         ILessonRepository lessonRepository,
-        ISessionAttendanceRepository attendanceRepository)
+        ISessionAttendanceRepository attendanceRepository,
+        ILessonSessionRepository sessionRepository)
     {
         _lessonRepository = lessonRepository;
         _attendanceRepository = attendanceRepository;
+        _sessionRepository = sessionRepository;
     }
 
     public async Task<IEnumerable<StudentLessonDto>> GetMyLessonsAsync(int studentId)
@@ -26,84 +27,46 @@ public class StudentAttendanceService : IStudentAttendanceService
 
         foreach (var lesson in lessons)
         {
-            var detailedLesson = await _lessonRepository.GetByIdWithDetailsAsync(lesson.Id);
-            var attendances = await _attendanceRepository.GetStudentAttendanceAsync(studentId, lesson.Id);
+            var sessions = await _sessionRepository.GetByLessonIdAsync(lesson.Id);
+            var sessionIds = sessions.Select(s => s.Id).ToList();
+
+            var attendances = await _attendanceRepository.GetAllAsync(
+                predicate: a => a.StudentId == studentId && sessionIds.Contains(a.SessionId));
 
             result.Add(new StudentLessonDto
             {
                 LessonId = lesson.Id,
                 LessonName = lesson.Name,
                 LessonCode = lesson.Code,
-                TotalSessions = detailedLesson?.Sessions.Count ?? 0,
-                PresentCount = attendances.Count(x => x.Status == AttendanceStatus.Present),
-                LateCount = attendances.Count(x => x.Status == AttendanceStatus.Late),
-                AbsentCount = attendances.Count(x => x.Status == AttendanceStatus.Absent),
-                ExcusedCount = attendances.Count(x => x.Status == AttendanceStatus.Excused)
+                TotalSessions = sessions.Count,
+                PresentCount = attendances.Count(a => a.Status == AttendanceStatus.Present),
+                LateCount = attendances.Count(a => a.Status == AttendanceStatus.Late),
+                AbsentCount = attendances.Count(a => a.Status == AttendanceStatus.Absent),
+                ExcusedCount = attendances.Count(a => a.Status == AttendanceStatus.Excused)
             });
         }
 
         return result;
     }
 
-    public async Task<IEnumerable<StudentAttendanceDto>> GetMyAttendanceAsync(int studentId, int lessonId)
-    {
-        var lesson = await _lessonRepository.GetByIdWithDetailsAsync(lessonId);
-
-        if (lesson == null)
-            throw new KeyNotFoundException("Lesson was not found.");
-
-        var attendances = await _attendanceRepository.GetStudentAttendanceAsync(studentId, lessonId);
-
-        return attendances
-            .Where(x => x.Session != null)
-            .OrderBy(x => x.Session!.Date)
-            .ThenBy(x => x.Session!.StartTime)
-            .Select(x => new StudentAttendanceDto
-            {
-                AttendanceId = x.Id,
-                SessionId = x.SessionId,
-                SessionStartTime = x.Session!.Date.ToDateTime(x.Session.StartTime),
-                SessionEndTime = x.Session.Date.ToDateTime(x.Session.EndTime),
-                LessonName = lesson.Name,
-                LessonCode = lesson.Code,
-                Status = x.Status.ToString(),
-                FirstScanAt = null,
-                InstructorNote = null
-            })
-            .ToList();
-    }
-
     public async Task<IEnumerable<StudentAttendanceDto>> GetMyAttendanceByLessonAsync(int studentId, int lessonId)
     {
-        var isEnrolled = await _lessonRepository.ExistsAsync(lessonId, studentId);
-        if (!isEnrolled)
-            throw new UnauthorizedAccessException("Student is not enrolled in this lesson.");
+        var lesson = await _lessonRepository.GetByIdAsync(lessonId);
+        var records = await _attendanceRepository.GetStudentAttendanceAsync(studentId, lessonId);
 
-        var attendances = await _attendanceRepository.GetStudentAttendanceAsync(studentId, lessonId);
-
-        var result = attendances
-            .OrderBy(x => x.Session!.Date)
-            .ThenBy(x => x.Session!.StartTime)
-            .Select(x => new StudentAttendanceDto
-            {
-                AttendanceId = x.Id,
-                SessionId = x.SessionId,
-                SessionStartTime = x.Session != null
-                    ? x.Session.Date.ToDateTime(x.Session.StartTime)
-                    : default,
-                SessionEndTime = x.Session != null
-                    ? x.Session.Date.ToDateTime(x.Session.EndTime)
-                    : default,
-                LessonName = x.Session?.Lesson?.Name ?? string.Empty,
-                LessonCode = x.Session?.Lesson?.Code ?? string.Empty,
-                Status = x.Status.ToString(),
-                FirstScanAt = x.FirstScanAt,
-                LastScanAt = x.LastScanAt,
-                IsManuallyAdjusted = x.IsManuallyAdjusted,
-                InstructorNote = x.InstructorNote
-            })
-            .ToList();
-
-        return result;
+        return records.Select(r => new StudentAttendanceDto
+        {
+            AttendanceId = r.Id,
+            SessionId = r.SessionId,
+            SessionStartTime = r.Session!.Date.ToDateTime(r.Session.StartTime),
+            SessionEndTime = r.Session.Date.ToDateTime(r.Session.EndTime),
+            LessonName = lesson.Name,
+            LessonCode = lesson.Code,
+            Status = r.Status.ToString(),
+            FirstScanAt = r.FirstScanAt,
+            LastScanAt = r.LastScanAt,
+            IsManuallyAdjusted = r.IsManuallyAdjusted,
+            InstructorNote = r.InstructorNote
+        });
     }
 }
