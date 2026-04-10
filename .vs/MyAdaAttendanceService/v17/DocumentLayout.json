@@ -154,8 +154,7 @@
               "RelativeToolTip": "MyAdaAttendanceService.Web\\Controllers\\InstructorSessionsController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAswBoAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-09T23:36:32.382Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T23:36:32.382Z"
             },
             {
               "$type": "Document",
@@ -167,8 +166,7 @@
               "RelativeToolTip": "MyAdaAttendanceService.Application\\Services\\AttendanceService.cs",
               "ViewState": "AgIAAFMAAAAAAAAAAAAkwGgAAABZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-07T15:36:44.689Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-07T15:36:44.689Z"
             },
             {
               "$type": "Document",
@@ -238,7 +236,7 @@
               "RelativeDocumentMoniker": "MyAdaAttendanceService.Web\\appsettings.json",
               "ToolTip": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Web\\appsettings.json",
               "RelativeToolTip": "MyAdaAttendanceService.Web\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-04-07T08:24:34.687Z",
               "EditorCaption": ""
@@ -517,8 +515,7 @@
               "RelativeToolTip": "MyAdaAttendanceService.Core\\Entities\\Lesson.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-05T12:32:08.798Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-05T12:32:08.798Z"
             }
           ]
         }

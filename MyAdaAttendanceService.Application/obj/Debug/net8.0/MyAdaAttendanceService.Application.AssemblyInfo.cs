@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MyAdaAttendanceService.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c413581bf4824273bad77d0064816df86bd2d4b8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c5252398e2cee6d8717d54dab61acfa73cd9009")]
 [assembly: System.Reflection.AssemblyProductAttribute("MyAdaAttendanceService.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MyAdaAttendanceService.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
