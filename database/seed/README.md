@@ -14,6 +14,15 @@ The Web app copies `lessons.pipe.txt` to `SeedData/` on build. On startup, **aft
 
 `Populate-Database.ps1` truncates lesson-related tables and inserts one row per section into `"Lessons"`. Use this if you need to **reset** data or run outside the app.
 
+## Sync max capacity (`Capacity`) without truncating
+
+If lessons already exist but `"Capacity"` is out of date compared to `availableSeats` in `lessons.pipe.txt`, apply one of these:
+
+1. **EF migration** (recommended): deploy includes `DataUpdateLessonCapacityFromSeed`, which runs `UPDATE "Lessons" SET "Capacity" = … WHERE "CRN" = …` for all 102 CRNs from the pipe file.
+2. **Manual SQL**: run `update-lesson-capacity-from-seed.sql` against PostgreSQL (same statements as the migration).
+
+Regenerate the SQL when `lessons.pipe.txt` changes: rebuild the `VALUES` list from CRN (column 4) and `availableSeats` (column 6).
+
 ## Column mapping
 
 | Source column        | `Lessons` column | Notes |

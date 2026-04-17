@@ -4,7 +4,7 @@ using MyAdaAttendanceService.Application.Services.Interfaces;
 
 namespace MyAdaAttendanceService.Web.Controllers;
 
-[Route("api/instructors/me/sessions")]
+[Route("api/instructors/{instructorId:guid}/sessions")]
 public class InstructorSessionsController : ApiControllerBase
 {
     private readonly IAttendanceService _attendanceService;
@@ -16,61 +16,70 @@ public class InstructorSessionsController : ApiControllerBase
     }
 
     [HttpPost("{sessionId:int}/attendance/activate")]
-    public async Task<IActionResult> ActivateAttendance(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.ActivateAttendanceAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> ActivateAttendance(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _attendanceService.ActivateAttendanceAsync(instructorId, sessionId);
+        });
 
     [HttpPost("{sessionId:int}/attendance/deactivate")]
-    public async Task<IActionResult> DeactivateAttendance(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.DeactivateAttendanceAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> DeactivateAttendance(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _attendanceService.DeactivateAttendanceAsync(instructorId, sessionId);
+        });
 
     [HttpPost("{sessionId:int}/qr-token")]
-    public async Task<IActionResult> IssueQrToken(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.IssueQrTokenAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> IssueQrToken(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _attendanceService.IssueQrTokenAsync(instructorId, sessionId);
+        });
 
     [HttpGet("{sessionId:int}/attendance")]
-    public async Task<IActionResult> GetAttendance(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.GetSessionAttendanceAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> GetAttendance(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _attendanceService.GetSessionAttendanceAsync(instructorId, sessionId);
+        });
 
     [HttpGet("{sessionId:int}/attendance/summary")]
-    public async Task<IActionResult> GetAttendanceSummary(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.GetSessionAttendanceSummaryAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> GetAttendanceSummary(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _attendanceService.GetSessionAttendanceSummaryAsync(instructorId, sessionId);
+        });
 
-    [HttpPatch("{sessionId:int}/attendance/{studentId:int}")]
-    public async Task<IActionResult> UpdateAttendance(
+    [HttpPatch("{sessionId:int}/attendance/{studentId:guid}")]
+    public Task<IActionResult> UpdateAttendance(
+        Guid instructorId,
         int sessionId,
-        int studentId,
-        [FromBody] UpdateAttendanceDto dto)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.UpdateAttendanceAsync(instructorId, sessionId, studentId, dto));
-    }
+        Guid studentId,
+        [FromBody] UpdateAttendanceDto dto) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _attendanceService.UpdateAttendanceAsync(instructorId, sessionId, studentId, dto);
+        });
 
     [HttpPost("{sessionId:int}/attendance/finalize")]
-    public async Task<IActionResult> FinalizeAttendance(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.FinalizeAttendanceAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> FinalizeAttendance(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            await _attendanceService.FinalizeAttendanceAsync(instructorId, sessionId);
+        });
 
     [HttpPost("{sessionId:int}/attendance/bulk-absent")]
-    public async Task<IActionResult> BulkMarkAbsent(int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _attendanceService.BulkMarkAbsentAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> BulkMarkAbsent(Guid instructorId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            await _attendanceService.BulkMarkAbsentAsync(instructorId, sessionId);
+        });
 }

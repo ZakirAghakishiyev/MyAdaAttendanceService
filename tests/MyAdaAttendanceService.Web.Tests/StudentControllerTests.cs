@@ -10,10 +10,12 @@ namespace MyAdaAttendanceService.Web.Tests;
 
 public class StudentControllerTests
 {
+    private static readonly Guid UserId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
     private static StudentController CreateController(
         IStudentAttendanceService studentAttendanceService,
         IAttendanceService attendanceService,
-        int userId = 7)
+        Guid? userId = null)
     {
         var controller = new StudentController(studentAttendanceService, attendanceService);
         controller.ControllerContext = new ControllerContext
@@ -22,7 +24,7 @@ public class StudentControllerTests
             {
                 User = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, (userId ?? UserId).ToString())
                 }, "test"))
             }
         };
@@ -33,10 +35,10 @@ public class StudentControllerTests
     public async Task GetMyEnrollments_ReturnsOk()
     {
         var svc = new Mock<IStudentAttendanceService>();
-        svc.Setup(x => x.GetMyLessonsAsync(7)).ReturnsAsync(new List<StudentLessonDto>());
+        svc.Setup(x => x.GetMyLessonsAsync(UserId)).ReturnsAsync(new List<StudentLessonDto>());
         var controller = CreateController(svc.Object, new Mock<IAttendanceService>().Object);
 
-        var response = await controller.GetMyEnrollments();
+        var response = await controller.GetMyEnrollments(UserId);
 
         Assert.IsType<OkObjectResult>(response);
     }
@@ -45,10 +47,10 @@ public class StudentControllerTests
     public async Task GetMyAttendanceByLesson_ReturnsNotFound_WhenServiceThrows()
     {
         var svc = new Mock<IStudentAttendanceService>();
-        svc.Setup(x => x.GetMyAttendanceByLessonAsync(7, 10)).ThrowsAsync(new KeyNotFoundException("missing"));
+        svc.Setup(x => x.GetMyAttendanceByLessonAsync(UserId, 10)).ThrowsAsync(new KeyNotFoundException("missing"));
         var controller = CreateController(svc.Object, new Mock<IAttendanceService>().Object);
 
-        var response = await controller.GetMyAttendanceByLesson(10);
+        var response = await controller.GetMyAttendanceByLesson(UserId, 10);
 
         Assert.IsType<NotFoundObjectResult>(response);
     }
@@ -57,13 +59,12 @@ public class StudentControllerTests
     public async Task ScanAttendance_ReturnsOk_WhenServiceAcceptsScan()
     {
         var attendanceSvc = new Mock<IAttendanceService>();
-        attendanceSvc.Setup(x => x.MarkAttendanceByQrAsync(7, It.IsAny<QrScanRequestDto>()))
+        attendanceSvc.Setup(x => x.MarkAttendanceByQrAsync(It.Is<QrScanRequestDto>(d => d.StudentId == UserId)))
             .ReturnsAsync(new QrScanResponseDto { Success = true });
 
         var controller = CreateController(new Mock<IStudentAttendanceService>().Object, attendanceSvc.Object);
-        var response = await controller.ScanAttendance(new QrScanRequestDto { Token = "t" });
+        var response = await controller.ScanAttendance(UserId, new QrScanRequestDto { Token = "t" });
 
         Assert.IsType<OkObjectResult>(response);
     }
 }
-

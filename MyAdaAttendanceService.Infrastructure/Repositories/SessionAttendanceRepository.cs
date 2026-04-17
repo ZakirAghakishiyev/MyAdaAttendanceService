@@ -8,7 +8,7 @@ public class SessionAttendanceRepository : EfCoreRepository<SessionAttendance>, 
 {
     public SessionAttendanceRepository(AppDbContext context) : base(context) { }
 
-    public async Task<SessionAttendance?> GetBySessionAndStudentAsync(int sessionId, int studentId)
+    public async Task<SessionAttendance?> GetBySessionAndStudentAsync(int sessionId, Guid studentId)
     {
         return await _dbSet
             .FirstOrDefaultAsync(x =>
@@ -23,7 +23,7 @@ public class SessionAttendanceRepository : EfCoreRepository<SessionAttendance>, 
             .ToListAsync();
     }
 
-    public async Task<List<SessionAttendance>> GetStudentAttendanceAsync(int studentId, int lessonId)
+    public async Task<List<SessionAttendance>> GetStudentAttendanceAsync(Guid studentId, int lessonId)
     {
         return await _dbSet
             .Include(x => x.Session)
@@ -45,7 +45,7 @@ public class SessionAttendanceRepository : EfCoreRepository<SessionAttendance>, 
             .CountAsync(x => x.SessionId == sessionId && x.Status == status);
     }
 
-    public async Task<bool> ExistsAsync(int sessionId, int studentId)
+    public async Task<bool> ExistsAsync(int sessionId, Guid studentId)
     {
         return await _dbSet
             .AnyAsync(x => x.SessionId == sessionId && x.StudentId == studentId);

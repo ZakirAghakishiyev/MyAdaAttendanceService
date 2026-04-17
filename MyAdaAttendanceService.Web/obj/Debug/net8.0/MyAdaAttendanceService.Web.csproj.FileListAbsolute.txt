@@ -142,4 +142,12 @@ C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin
 C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\SeedData\lessons.pipe.txt
-C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\obj\Debug\net8.0\swae.build.ex.cache
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\MyAdaAttendanceService.Web\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

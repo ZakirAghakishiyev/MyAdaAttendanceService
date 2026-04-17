@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using MyAdaAttendanceService.Core;
 using MyAdaAttendanceService.Core.Entities;
 using MyAdaAttendanceService.Infrastructure;
 
@@ -9,6 +10,10 @@ public static class LessonPipeSeeder
 {
     private static readonly Regex PrimaryInstructorRegex = new(
         @"^(.+?)\(Primary\)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex TermRegex = new(
+        @"^(Fall|Spring|Summer)\s*(\d{4})$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static async Task SeedIfEmptyAsync(
@@ -35,7 +40,8 @@ public static class LessonPipeSeeder
             return;
         }
 
-        var semester = config["Database:SeedSemester"] ?? "Spring2026";
+        var termRaw = config["Database:SeedSemester"] ?? "Spring2026";
+        var (academicYear, academicSemester) = ParseSeedTerm(termRaw);
         var roomId = config.GetValue("Database:SeedRoomId", 1);
         var credits = config.GetValue("Database:SeedDefaultCredits", 3);
 
@@ -79,38 +85,110 @@ public static class LessonPipeSeeder
             instructorKeys.Add(GetPrimaryInstructorKey(r.Instructor));
 
         var sorted = instructorKeys.OrderBy(x => x, StringComparer.Ordinal).ToList();
-        var instructorIdByKey = new Dictionary<string, int>(StringComparer.Ordinal);
-        var next = 1;
+        var directoryEntries = await db.ExternalUserDirectoryEntries
+            .Where(x => x.Role == "instructor")
+            .ToListAsync(cancellationToken);
+        var instructorIdByKey = new Dictionary<string, Guid>(StringComparer.Ordinal);
         foreach (var name in sorted)
-            instructorIdByKey[name] = next++;
+        {
+            var match = directoryEntries.FirstOrDefault(x =>
+                string.Equals($"{x.FirstName} {x.LastName}".Trim(), name, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(x.UserName, name, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(x.Email, name, StringComparison.OrdinalIgnoreCase));
 
+            if (match is not null)
+                instructorIdByKey[name] = match.UserId;
+        }
+
+        if (instructorIdByKey.Count == 0)
+        {
+            logger.LogWarning("No instructor mappings found in synced auth users; skipping lesson seed.");
+            return;
+        }
+
+        var courseRows = rows
+            .GroupBy(r => (r.SubjectDescription, r.CourseNumber))
+            .Select(g => g.First())
+            .ToList();
+
+        var courses = new List<Course>(courseRows.Count);
+        foreach (var r in courseRows)
+        {
+            courses.Add(new Course
+            {
+                Name = r.CourseTitle,
+                Department = r.SubjectDescription,
+                Code = r.CourseNumber,
+                Credits = credits,
+                TimesPerWeek = r.LessonsPerWeek
+            });
+        }
+
+        await db.Courses.AddRangeAsync(courses, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        var courseIdByKey = courses.ToDictionary(c => (c.Department, c.Code), c => c.Id);
+
+        var seq = 0;
         var lessons = new List<Lesson>(rows.Count);
         foreach (var r in rows)
         {
             var key = GetPrimaryInstructorKey(r.Instructor);
+            if (!instructorIdByKey.TryGetValue(key, out var instructorId))
+            {
+                logger.LogWarning("Skipping lesson seed row for instructor {Instructor} because no synced auth user matched.", key);
+                continue;
+            }
+            var courseId = courseIdByKey[(r.SubjectDescription, r.CourseNumber)];
+            seq++;
+            var crn = CrnFormatter.Format(academicSemester, seq);
             lessons.Add(new Lesson
             {
-                InstructorId = instructorIdByKey[key],
+                InstructorId = instructorId,
                 RoomId = roomId,
-                Semester = semester,
-                CRN = r.Crn,
-                Name = r.CourseTitle,
-                Type = "Section",
-                Department = r.SubjectDescription,
-                Code = r.CourseNumber,
-                Credits = credits,
-                TimesPerWeek = r.LessonsPerWeek,
-                Capacity = r.AvailableSeats
+                CourseId = courseId,
+                AcademicYear = academicYear,
+                Semester = academicSemester,
+                CRN = crn,
+                MaxCapacity = r.AvailableSeats
             });
+        }
+
+        if (lessons.Count == 0)
+        {
+            logger.LogWarning("No lessons were seeded because none of the instructors matched synced auth users.");
+            return;
         }
 
         await db.Lessons.AddRangeAsync(lessons, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
-            "Seeded {Count} lessons from pipe file ({Instructors} distinct instructor keys).",
+            "Seeded {Count} lessons from pipe file ({Instructors} distinct instructor keys), term {Year} {Semester}.",
             lessons.Count,
-            instructorIdByKey.Count);
+            instructorIdByKey.Count,
+            academicYear,
+            academicSemester);
+    }
+
+    private static (int AcademicYear, AcademicSemester Semester) ParseSeedTerm(string raw)
+    {
+        var t = raw.Trim();
+        var m = TermRegex.Match(t);
+        if (m.Success)
+        {
+            var sem = m.Groups[1].Value.ToUpperInvariant() switch
+            {
+                "FALL" => AcademicSemester.Fall,
+                "SPRING" => AcademicSemester.Spring,
+                "SUMMER" => AcademicSemester.Summer,
+                _ => AcademicSemester.Spring
+            };
+            var year = int.Parse(m.Groups[2].Value);
+            return (year, sem);
+        }
+
+        return (DateTime.UtcNow.Year, AcademicSemester.Spring);
     }
 
     private static string GetPrimaryInstructorKey(string raw)

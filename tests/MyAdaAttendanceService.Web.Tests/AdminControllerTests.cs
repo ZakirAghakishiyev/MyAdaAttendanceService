@@ -2,12 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MyAdaAttendanceService.Application.DTOs;
 using MyAdaAttendanceService.Application.Services.Interfaces;
+using MyAdaAttendanceService.Core;
 using MyAdaAttendanceService.Web.Controllers;
 
 namespace MyAdaAttendanceService.Web.Tests;
 
 public class AdminControllerTests
 {
+    private static readonly Guid InstructorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     [Fact]
     public async Task GetAllLessons_ReturnsOkWithLessons()
     {
@@ -16,7 +19,7 @@ public class AdminControllerTests
             .Setup(x => x.GetAllLessonsAsync())
             .ReturnsAsync(new List<LessonDto>
             {
-                new() { Id = 1, Name = "Algorithms", Code = "CSE201", InstructorId = 11 }
+                new() { Id = 1, Name = "Algorithms", Code = "CSE201", InstructorId = InstructorId }
             });
 
         var sessionService = new Mock<ISessionService>();
@@ -24,9 +27,12 @@ public class AdminControllerTests
         var adminAttendanceService = new Mock<IAdminAttendanceService>();
         var controller = new AdminController(
             lessonService.Object,
+            new Mock<ICourseService>().Object,
             sessionService.Object,
             attendanceService.Object,
-            adminAttendanceService.Object);
+            adminAttendanceService.Object,
+            new Mock<IEnrollmentService>().Object,
+            new Mock<IExternalUserDirectoryService>().Object);
 
         var response = await controller.GetAllLessons();
 
@@ -45,9 +51,12 @@ public class AdminControllerTests
 
         var controller = new AdminController(
             lessonService.Object,
+            new Mock<ICourseService>().Object,
             new Mock<ISessionService>().Object,
             new Mock<IAttendanceService>().Object,
-            new Mock<IAdminAttendanceService>().Object);
+            new Mock<IAdminAttendanceService>().Object,
+            new Mock<IEnrollmentService>().Object,
+            new Mock<IExternalUserDirectoryService>().Object);
 
         var response = await controller.GetLessonById(404);
 
@@ -67,14 +76,53 @@ public class AdminControllerTests
 
         var controller = new AdminController(
             new Mock<ILessonService>().Object,
+            new Mock<ICourseService>().Object,
             sessionService.Object,
             new Mock<IAttendanceService>().Object,
-            new Mock<IAdminAttendanceService>().Object);
+            new Mock<IAdminAttendanceService>().Object,
+            new Mock<IEnrollmentService>().Object,
+            new Mock<IExternalUserDirectoryService>().Object);
 
         var response = await controller.GetSessionsByLesson(102);
 
         var ok = Assert.IsType<OkObjectResult>(response);
         var sessions = Assert.IsAssignableFrom<IEnumerable<SessionDto>>(ok.Value);
         Assert.Single(sessions);
+    }
+
+    [Fact]
+    public async Task GetLessonsForScheduling_ReturnsOkWithRows()
+    {
+        var lessonService = new Mock<ILessonService>();
+        lessonService
+            .Setup(x => x.GetLessonsForSchedulingAsync())
+            .ReturnsAsync(new List<LessonSchedulingRow>
+            {
+                new()
+                {
+                    LessonId = 1,
+                    InstructorUserId = InstructorId,
+                    Enrollment = 0,
+                    MaxCapacity = 35,
+                    TimesPerWeek = 2,
+                    CourseCode = "X",
+                    CourseTitle = "Y"
+                }
+            });
+
+        var controller = new AdminController(
+            lessonService.Object,
+            new Mock<ICourseService>().Object,
+            new Mock<ISessionService>().Object,
+            new Mock<IAttendanceService>().Object,
+            new Mock<IAdminAttendanceService>().Object,
+            new Mock<IEnrollmentService>().Object,
+            new Mock<IExternalUserDirectoryService>().Object);
+
+        var response = await controller.GetLessonsForScheduling();
+
+        var ok = Assert.IsType<OkObjectResult>(response);
+        var rows = Assert.IsAssignableFrom<IEnumerable<LessonSchedulingRow>>(ok.Value);
+        Assert.Single(rows);
     }
 }

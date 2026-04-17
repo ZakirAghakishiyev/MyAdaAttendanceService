@@ -1,10 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using MyAdaAttendanceService.Core;
 using MyAdaAttendanceService.Core.Entities;
 
 namespace MyAdaAttendanceService.Core.Tests;
 
 public class EntityValidationTests
 {
+    private static readonly Guid ValidUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     private static List<ValidationResult> Validate(object instance)
     {
         var results = new List<ValidationResult>();
@@ -14,38 +17,34 @@ public class EntityValidationTests
     }
 
     [Fact]
-    public void Lesson_FailsValidation_WhenNameIsMissing()
+    public void Lesson_FailsValidation_WhenCrnIsMissing()
     {
         var lesson = new Lesson
         {
-            InstructorId = 1,
+            InstructorId = ValidUserId,
             RoomId = 1,
-            Semester = "Spring",
-            CRN = "1",
-            Name = "",
-            Type = "Core",
-            Department = "CS",
-            Code = "CSE201"
+            CourseId = 1,
+            AcademicYear = 2026,
+            Semester = AcademicSemester.Spring,
+            CRN = ""
         };
 
         var results = Validate(lesson);
 
-        Assert.Contains(results, r => r.MemberNames.Contains(nameof(Lesson.Name)));
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(Lesson.CRN)));
     }
 
     [Fact]
-    public void Lesson_FailsValidation_WhenInstructorIdIsZero()
+    public void Lesson_FailsValidation_WhenInstructorIdIsEmpty()
     {
         var lesson = new Lesson
         {
-            InstructorId = 0,
+            InstructorId = Guid.Empty,
             RoomId = 1,
-            Semester = "Spring",
-            CRN = "1",
-            Name = "Algorithms",
-            Type = "Core",
-            Department = "CS",
-            Code = "CSE201"
+            CourseId = 1,
+            AcademicYear = 2026,
+            Semester = AcademicSemester.Spring,
+            CRN = "20001"
         };
 
         var results = Validate(lesson);
@@ -54,23 +53,21 @@ public class EntityValidationTests
     }
 
     [Fact]
-    public void Lesson_FailsValidation_WhenNameTooLong()
+    public void Lesson_FailsValidation_WhenCrnTooLong()
     {
         var lesson = new Lesson
         {
-            InstructorId = 1,
+            InstructorId = ValidUserId,
             RoomId = 1,
-            Semester = "Spring",
-            CRN = "1",
-            Name = new string('a', 300),
-            Type = "Core",
-            Department = "CS",
-            Code = "CSE201"
+            CourseId = 1,
+            AcademicYear = 2026,
+            Semester = AcademicSemester.Spring,
+            CRN = "123456"
         };
 
         var results = Validate(lesson);
 
-        Assert.Contains(results, r => r.MemberNames.Contains(nameof(Lesson.Name)));
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(Lesson.CRN)));
     }
 
     [Fact]
@@ -88,7 +85,7 @@ public class EntityValidationTests
         var log = new AttendanceScanLog
         {
             SessionId = 1,
-            StudentId = 1,
+            StudentId = ValidUserId,
             ActivationId = 0,
             TokenJti = new string('x', 200),
             ScannedAt = DateTime.UtcNow,
@@ -100,4 +97,3 @@ public class EntityValidationTests
         Assert.Contains(results, r => r.MemberNames.Contains(nameof(AttendanceScanLog.TokenJti)));
     }
 }
-

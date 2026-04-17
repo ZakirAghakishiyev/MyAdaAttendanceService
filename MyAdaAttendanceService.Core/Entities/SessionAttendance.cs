@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MyAdaAttendanceService.Core.Validation;
 
 namespace MyAdaAttendanceService.Core.Entities;
 
@@ -9,14 +10,14 @@ public class SessionAttendance
     [Range(1, int.MaxValue)]
     public int SessionId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int StudentId { get; set; }
+    [NonEmptyGuid]
+    public Guid StudentId { get; set; }
 
     public AttendanceStatus Status { get; set; }
     public DateTime? MarkedAt { get; set; }
     public AttendanceMarkedSource MarkedSource { get; set; } = AttendanceMarkedSource.QR;
     public DateTime? UpdatedAt { get; set; }
-    public int? UpdatedBy { get; set; }
+    public Guid? UpdatedBy { get; set; }
     public DateTime? FirstScanAt { get; set; }
     public DateTime? LastScanAt { get; set; }
 

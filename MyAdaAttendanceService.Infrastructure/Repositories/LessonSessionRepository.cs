@@ -20,7 +20,8 @@ public class LessonSessionRepository : EfCoreRepository<LessonSession>, ILessonS
     public async Task<LessonSession?> GetByIdWithLessonAsync(int sessionId)
     {
         return await _dbSet
-            .Include(x => x.Lesson)
+            .Include(x => x.Lesson!)
+            .ThenInclude(l => l.Course)
             .FirstOrDefaultAsync(x => x.Id == sessionId);
     }
 
@@ -31,10 +32,11 @@ public class LessonSessionRepository : EfCoreRepository<LessonSession>, ILessonS
             .FirstOrDefaultAsync(x => x.Id == sessionId);
     }
 
-    public async Task<LessonSession?> GetInstructorSessionAsync(int instructorId, int sessionId)
+    public async Task<LessonSession?> GetInstructorSessionAsync(Guid instructorId, int sessionId)
     {
         return await _dbSet
-            .Include(x => x.Lesson)
+            .Include(x => x.Lesson!)
+            .ThenInclude(l => l.Course)
             .FirstOrDefaultAsync(x =>
                 x.Id == sessionId &&
                 x.Lesson != null &&
@@ -66,5 +68,15 @@ public class LessonSessionRepository : EfCoreRepository<LessonSession>, ILessonS
             .OrderByDescending(x => x.Date)
             .ThenByDescending(x => x.StartTime)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task AddRangeAsync(IEnumerable<LessonSession> sessions, CancellationToken cancellationToken = default)
+    {
+        var list = sessions as IList<LessonSession> ?? sessions.ToList();
+        if (list.Count == 0)
+            return;
+
+        await _dbSet.AddRangeAsync(list, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MyAdaAttendanceService.Core.Validation;
 
 namespace MyAdaAttendanceService.Core.Entities;
 
@@ -9,8 +10,8 @@ public class AttendanceScanLog
     [Range(1, int.MaxValue)]
     public int SessionId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int StudentId { get; set; }
+    [NonEmptyGuid]
+    public Guid StudentId { get; set; }
 
     [Range(0, int.MaxValue)]
     public int ActivationId { get; set; }

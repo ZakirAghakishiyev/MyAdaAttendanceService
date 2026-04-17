@@ -153,3 +153,11 @@ C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.W
 C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\obj\Debug\net8.0\MyAdaAttendanceService.Web.Tests.pdb
 C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\obj\Debug\net8.0\MyAdaAttendanceService.Web.Tests.genruntimeconfig.cache
 C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\obj\Debug\net8.0\ref\MyAdaAttendanceService.Web.Tests.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Web.Tests\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

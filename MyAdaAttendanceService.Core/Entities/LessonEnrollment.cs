@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MyAdaAttendanceService.Core.Validation;
 
 namespace MyAdaAttendanceService.Core.Entities;
 
@@ -9,8 +10,8 @@ public class LessonEnrollment
     [Range(1, int.MaxValue)]
     public int LessonId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int StudentId { get; set; }
+    [NonEmptyGuid]
+    public Guid StudentId { get; set; }
 
     public Lesson? Lesson { get; set; }
 }

@@ -4,7 +4,7 @@ using MyAdaAttendanceService.Application.Services.Interfaces;
 
 namespace MyAdaAttendanceService.Web.Controllers;
 
-[Route("api/instructors/me/lessons")]
+[Route("api/instructors/{instructorId:guid}/lessons")]
 public class InstructorLessonsController : ApiControllerBase
 {
     private readonly ILessonService _lessonService;
@@ -19,54 +19,69 @@ public class InstructorLessonsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMyLessons()
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _lessonService.GetMyLessonsAsync(instructorId));
-    }
+    public Task<IActionResult> GetMyLessons(Guid instructorId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _lessonService.GetMyLessonsAsync(instructorId);
+        });
 
     [HttpGet("{lessonId:int}")]
-    public async Task<IActionResult> GetMyLesson(int lessonId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _lessonService.GetMyLessonByIdAsync(instructorId, lessonId));
-    }
+    public Task<IActionResult> GetMyLesson(Guid instructorId, int lessonId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _lessonService.GetMyLessonByIdAsync(instructorId, lessonId);
+        });
 
     [HttpGet("{lessonId:int}/sessions")]
-    public async Task<IActionResult> GetSessions(int lessonId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _sessionService.GetSessionsByLessonAsync(instructorId, lessonId));
-    }
+    public Task<IActionResult> GetSessions(Guid instructorId, int lessonId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _sessionService.GetSessionsByLessonAsync(instructorId, lessonId);
+        });
 
     [HttpGet("{lessonId:int}/sessions/{sessionId:int}")]
-    public async Task<IActionResult> GetSession(int lessonId, int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _sessionService.GetSessionByIdAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> GetSession(Guid instructorId, int lessonId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _sessionService.GetSessionByIdAsync(instructorId, sessionId);
+        });
 
     [HttpPost("{lessonId:int}/sessions")]
-    public async Task<IActionResult> CreateSession(int lessonId, [FromBody] CreateSessionDto dto)
-    {
-        var instructorId = GetCurrentUserId();
-        dto.LessonId = lessonId;
-        return await HandleAsync(
-            () => _sessionService.CreateSessionAsync(instructorId, dto),
-            session => CreatedAtAction(nameof(GetSession), new { lessonId, sessionId = session.Id }, session));
-    }
+    public Task<IActionResult> CreateSession(Guid instructorId, int lessonId, [FromBody] CreateSessionDto dto) =>
+        HandleAsync(
+            async () =>
+            {
+                EnsureRouteUserMatchesClaim(instructorId);
+                return await _sessionService.CreateSessionAsync(instructorId, lessonId, dto);
+            },
+            session => CreatedAtAction(nameof(GetSession), new { instructorId, lessonId, sessionId = session.Id }, session));
+
+    /// <summary>Generate sessions between two dates for each listed weekday and time window; existing same date/time rows are skipped.</summary>
+    [HttpPost("{lessonId:int}/sessions/generate")]
+    public Task<IActionResult> GenerateSessions(Guid instructorId, int lessonId, [FromBody] BulkGenerateSessionsDto dto) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _sessionService.BulkGenerateSessionsAsync(instructorId, lessonId, dto);
+        });
 
     [HttpPatch("{lessonId:int}/sessions/{sessionId:int}")]
-    public async Task<IActionResult> UpdateSession(int lessonId, int sessionId, [FromBody] UpdateSessionDto dto)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _sessionService.UpdateSessionAsync(instructorId, sessionId, dto));
-    }
+    public Task<IActionResult> UpdateSession(Guid instructorId, int lessonId, int sessionId, [FromBody] UpdateSessionDto dto) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            return await _sessionService.UpdateSessionAsync(instructorId, sessionId, dto);
+        });
 
     [HttpDelete("{lessonId:int}/sessions/{sessionId:int}")]
-    public async Task<IActionResult> DeleteSession(int lessonId, int sessionId)
-    {
-        var instructorId = GetCurrentUserId();
-        return await HandleAsync(() => _sessionService.DeleteSessionAsync(instructorId, sessionId));
-    }
+    public Task<IActionResult> DeleteSession(Guid instructorId, int lessonId, int sessionId) =>
+        HandleAsync(async () =>
+        {
+            EnsureRouteUserMatchesClaim(instructorId);
+            await _sessionService.DeleteSessionAsync(instructorId, sessionId);
+        });
 }

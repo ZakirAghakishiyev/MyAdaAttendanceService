@@ -20,7 +20,7 @@ public class StudentAttendanceService : IStudentAttendanceService
         _sessionRepository = sessionRepository;
     }
 
-    public async Task<IEnumerable<StudentLessonDto>> GetMyLessonsAsync(int studentId)
+    public async Task<IEnumerable<StudentLessonDto>> GetMyLessonsAsync(Guid studentId)
     {
         var lessons = await _lessonRepository.GetStudentLessonsAsync(studentId);
         var result = new List<StudentLessonDto>();
@@ -36,8 +36,8 @@ public class StudentAttendanceService : IStudentAttendanceService
             result.Add(new StudentLessonDto
             {
                 LessonId = lesson.Id,
-                LessonName = lesson.Name,
-                LessonCode = lesson.Code,
+                LessonName = lesson.Course!.Name,
+                LessonCode = lesson.Course.Code,
                 TotalSessions = sessions.Count,
                 PresentCount = attendances.Count(a => a.Status == AttendanceStatus.Present),
                 LateCount = attendances.Count(a => a.Status == AttendanceStatus.Late),
@@ -49,9 +49,10 @@ public class StudentAttendanceService : IStudentAttendanceService
         return result;
     }
 
-    public async Task<IEnumerable<StudentAttendanceDto>> GetMyAttendanceByLessonAsync(int studentId, int lessonId)
+    public async Task<IEnumerable<StudentAttendanceDto>> GetMyAttendanceByLessonAsync(Guid studentId, int lessonId)
     {
-        var lesson = await _lessonRepository.GetByIdAsync(lessonId);
+        var lesson = await _lessonRepository.GetByIdWithCourseAsync(lessonId)
+            ?? throw new KeyNotFoundException($"Lesson {lessonId} not found.");
         var records = await _attendanceRepository.GetStudentAttendanceAsync(studentId, lessonId);
 
         return records.Select(r => new StudentAttendanceDto
@@ -60,8 +61,8 @@ public class StudentAttendanceService : IStudentAttendanceService
             SessionId = r.SessionId,
             SessionStartTime = r.Session!.Date.ToDateTime(r.Session.StartTime),
             SessionEndTime = r.Session.Date.ToDateTime(r.Session.EndTime),
-            LessonName = lesson.Name,
-            LessonCode = lesson.Code,
+            LessonName = lesson.Course!.Name,
+            LessonCode = lesson.Course.Code,
             Status = r.Status.ToString(),
             FirstScanAt = r.FirstScanAt,
             LastScanAt = r.LastScanAt,

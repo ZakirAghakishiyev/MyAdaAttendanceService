@@ -11,7 +11,7 @@ public class AttendanceActivation
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }
     public bool IsActive { get; set; }
-    public int? CreatedByInstructorId { get; set; }
+    public Guid? CreatedByInstructorId { get; set; }
 
     public LessonSession? Session { get; set; }
 }

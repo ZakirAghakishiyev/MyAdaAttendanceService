@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
 using AutoWrapper;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using MyAdaAttendanceService.Application.Services.Interfaces;
 using MyAdaAttendanceService.Infrastructure;
 using MyAdaAttendanceService.Web.Seeding;
 using Serilog;
+using Microsoft.OpenApi.Models;
 
 namespace MyAdaAttendanceService.Web;
 public class Program
@@ -34,10 +37,51 @@ public class Program
         });
 
         builder.Services.AddInfrastructure();
-        builder.Services.AddControllers();
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+        builder.Services.AddControllers()
+            .AddJsonOptions(o =>
+            {
+                o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+        // Authentication/authorization is intentionally disabled.
+        // We still forward incoming bearer tokens to downstream auth service calls.
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Enter a bearer token issued by the auth service."
+            });
+
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
 
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(
@@ -53,6 +97,11 @@ public class Program
             var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             await db.Database.MigrateAsync();
+            if (config.GetValue("AuthService:SyncOnStartup", false))
+            {
+                var userDirectoryService = scope.ServiceProvider.GetRequiredService<IExternalUserDirectoryService>();
+                await userDirectoryService.SyncUsersAsync();
+            }
             await LessonPipeSeeder.SeedIfEmptyAsync(db, env, config, logger);
         }
 
@@ -72,13 +121,12 @@ public class Program
         });
         app.UseHttpLogging();
         app.UseHttpsRedirection();
-
-        app.UseAuthorization();
-
+        app.UseCors();
 
         app.MapControllers();
         app.Logger.LogInformation("MyAdaAttendanceService.Web started.");
 
         await app.RunAsync();
     }
+
 }

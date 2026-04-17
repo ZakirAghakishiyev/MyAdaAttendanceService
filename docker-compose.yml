@@ -34,6 +34,18 @@ services:
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=my_ada_attendance_db;Username=postgres;Password=12345
       # After migrations, load 102 lessons from SeedData/lessons.pipe.txt when the Lessons table is empty
       Database__SeedLessonsIfEmpty: "true"
+      # Auth service integration
+      AuthService__BaseUrl: "http://51.20.193.29:5000/"
+      AuthService__ServiceAccessToken: ""
+      AuthService__ServiceRefreshToken: ""
+      AuthService__RefreshPath: "${AUTH_SERVICE_REFRESH_PATH:-api/auth/refresh}"
+      # JWT validation settings for incoming bearer tokens
+      Authentication__Authority: "${AUTH_AUTHORITY:-}"
+      Authentication__Issuer: "${AUTH_ISSUER:-}"
+      Authentication__Audience: "${AUTH_AUDIENCE:-}"
+      Authentication__SigningKey: "${AUTH_SIGNING_KEY:-}"
+      Authentication__PublicKeyPem: "${AUTH_PUBLIC_KEY_PEM:-}"
+      Authentication__RequireHttpsMetadata: "${AUTH_REQUIRE_HTTPS_METADATA:-false}"
     ports:
       - "5008:8080"
 

@@ -11,6 +11,19 @@ public static class InfrastructureServiceExtensions
     {
         services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
 
+        services.AddHttpContextAccessor();
+        services.AddTransient<AuthServiceBearerForwardingHandler>();
+        services.AddHttpClient<IAuthUserClient, AuthUserClient>((sp, client) =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var baseUrl = config["AuthService:BaseUrl"] ?? "http://51.20.193.29:5000/";
+            client.BaseAddress = new Uri(baseUrl);
+        })
+        .AddHttpMessageHandler<AuthServiceBearerForwardingHandler>();
+
+        services.AddScoped<ICourseRepository, CourseRepository>();
+        services.AddScoped<ICourseService, CourseService>();
+        services.AddScoped<IExternalUserDirectoryService, ExternalUserDirectoryService>();
         services.AddScoped<ILessonService, LessonService>();
         services.AddScoped<ISessionService, SessionService>();
         services.AddScoped<IAttendanceService, AttendanceService>();
@@ -19,6 +32,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IAdminAttendanceService, AdminAttendanceService>();
 
         services.AddScoped<ILessonRepository, LessonRepository>();
+        services.AddScoped<IExternalUserDirectoryRepository, ExternalUserDirectoryRepository>();
         services.AddScoped<ILessonEnrollmentRepository, LessonEnrollmentRepository>();
         services.AddScoped<ILessonSessionRepository, LessonSessionRepository>();
         services.AddScoped<ISessionAttendanceRepository, SessionAttendanceRepository>();

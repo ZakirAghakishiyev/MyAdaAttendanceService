@@ -4,7 +4,7 @@ namespace MyAdaAttendanceService.Core.Interfaces;
 
 public interface IAttendanceScanLogRepository : IRepository<AttendanceScanLog>
 {
-    Task<bool> ExistsAcceptedByTokenAsync(int sessionId, int studentId, string tokenJti);
-    Task<int> CountAcceptedScansAsync(int sessionId, int studentId, int activationId);
+    Task<bool> ExistsAcceptedByTokenAsync(int sessionId, Guid studentId, string tokenJti);
+    Task<int> CountAcceptedScansAsync(int sessionId, Guid studentId, int activationId);
     Task<List<AttendanceScanLog>> GetAcceptedBySessionAndActivationAsync(int sessionId, int activationId);
 }

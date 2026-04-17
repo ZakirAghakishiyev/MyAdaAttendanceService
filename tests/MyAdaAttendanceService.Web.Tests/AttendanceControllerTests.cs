@@ -10,7 +10,9 @@ namespace MyAdaAttendanceService.Web.Tests;
 
 public class AttendanceControllerTests
 {
-    private static AttendanceController CreateController(IAttendanceService attendanceService, int userId = 7)
+    private static readonly Guid StudentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+    private static AttendanceController CreateController(IAttendanceService attendanceService, Guid? userId = null)
     {
         var controller = new AttendanceController(attendanceService);
         controller.ControllerContext = new ControllerContext
@@ -19,7 +21,7 @@ public class AttendanceControllerTests
             {
                 User = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, (userId ?? StudentId).ToString())
                 }, "test"))
             }
         };
@@ -30,11 +32,11 @@ public class AttendanceControllerTests
     public async Task ScanQr_ReturnsOk()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.MarkAttendanceByQrAsync(7, It.IsAny<QrScanRequestDto>()))
+        svc.Setup(x => x.MarkAttendanceByQrAsync(It.Is<QrScanRequestDto>(d => d.StudentId == StudentId)))
             .ReturnsAsync(new QrScanResponseDto { Success = true });
 
         var controller = CreateController(svc.Object);
-        var response = await controller.ScanQr(new QrScanRequestDto { Token = "t" });
+        var response = await controller.ScanQr(StudentId, new QrScanRequestDto { Token = "t" });
 
         Assert.IsType<OkObjectResult>(response);
     }
@@ -43,13 +45,12 @@ public class AttendanceControllerTests
     public async Task ScanQr_ReturnsBadRequest_WhenServiceThrowsArgumentException()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.MarkAttendanceByQrAsync(7, It.IsAny<QrScanRequestDto>()))
+        svc.Setup(x => x.MarkAttendanceByQrAsync(It.Is<QrScanRequestDto>(d => d.StudentId == StudentId)))
             .ThrowsAsync(new ArgumentException("bad"));
 
         var controller = CreateController(svc.Object);
-        var response = await controller.ScanQr(new QrScanRequestDto { Token = "t" });
+        var response = await controller.ScanQr(StudentId, new QrScanRequestDto { Token = "t" });
 
         Assert.IsType<BadRequestObjectResult>(response);
     }
 }
-

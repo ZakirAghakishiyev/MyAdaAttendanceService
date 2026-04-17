@@ -8,7 +8,7 @@ public class AttendanceScanLogRepository : EfCoreRepository<AttendanceScanLog>, 
 {
     public AttendanceScanLogRepository(AppDbContext context) : base(context) { }
 
-    public async Task<bool> ExistsAcceptedByTokenAsync(int sessionId, int studentId, string tokenJti)
+    public async Task<bool> ExistsAcceptedByTokenAsync(int sessionId, Guid studentId, string tokenJti)
     {
         return await _dbSet.AnyAsync(x =>
             x.SessionId == sessionId &&
@@ -17,7 +17,7 @@ public class AttendanceScanLogRepository : EfCoreRepository<AttendanceScanLog>, 
             x.Accepted);
     }
 
-    public async Task<int> CountAcceptedScansAsync(int sessionId, int studentId, int activationId)
+    public async Task<int> CountAcceptedScansAsync(int sessionId, Guid studentId, int activationId)
     {
         return await _dbSet.CountAsync(x =>
             x.SessionId == sessionId &&

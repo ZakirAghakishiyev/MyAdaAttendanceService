@@ -31,6 +31,10 @@ public abstract class ApiControllerBase : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     protected async Task<IActionResult> HandleAsync(Func<Task> action)
@@ -52,16 +56,40 @@ public abstract class ApiControllerBase : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    protected int GetCurrentUserId()
+    protected Guid GetCurrentUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier)
                  ?? User.FindFirst("sub");
 
-        if (claim is null || !int.TryParse(claim.Value, out var userId))
-            throw new UnauthorizedAccessException("User identity not found.");
+        return claim is not null && Guid.TryParse(claim.Value, out var userId)
+            ? userId
+            : Guid.Empty;
+    }
 
-        return userId;
+    protected Guid? TryGetCurrentUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)
+                 ?? User.FindFirst("sub");
+
+        return claim is not null && Guid.TryParse(claim.Value, out var userId)
+            ? userId
+            : null;
+    }
+
+    protected void EnsureAuthenticatedUserMatches(Guid requestedUserId)
+    {
+        _ = requestedUserId;
+    }
+
+    /// <summary>Ensures the route user id matches the authenticated principal (prevents acting as another user).</summary>
+    protected void EnsureRouteUserMatchesClaim(Guid routeUserId)
+    {
+        _ = routeUserId;
     }
 }

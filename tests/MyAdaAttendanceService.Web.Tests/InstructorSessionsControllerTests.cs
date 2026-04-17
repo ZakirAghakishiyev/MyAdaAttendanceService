@@ -10,7 +10,10 @@ namespace MyAdaAttendanceService.Web.Tests;
 
 public class InstructorSessionsControllerTests
 {
-    private static InstructorSessionsController CreateController(IAttendanceService attendanceService, int userId = 1)
+    private static readonly Guid InstructorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid StudentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+    private static InstructorSessionsController CreateController(IAttendanceService attendanceService, Guid? userId = null)
     {
         var controller = new InstructorSessionsController(attendanceService);
         controller.ControllerContext = new ControllerContext
@@ -19,7 +22,7 @@ public class InstructorSessionsControllerTests
             {
                 User = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, (userId ?? InstructorId).ToString())
                 }, "test"))
             }
         };
@@ -30,11 +33,11 @@ public class InstructorSessionsControllerTests
     public async Task ActivateAttendance_ReturnsOk_OnSuccess()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.ActivateAttendanceAsync(1, 5))
+        svc.Setup(x => x.ActivateAttendanceAsync(InstructorId, 5))
             .ReturnsAsync(new AttendanceActivationResultDto { SessionId = 5, IsAttendanceActive = true });
 
         var controller = CreateController(svc.Object);
-        var response = await controller.ActivateAttendance(5);
+        var response = await controller.ActivateAttendance(InstructorId, 5);
 
         Assert.IsType<OkObjectResult>(response);
     }
@@ -43,11 +46,11 @@ public class InstructorSessionsControllerTests
     public async Task ActivateAttendance_ReturnsUnauthorized_WhenServiceThrows()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.ActivateAttendanceAsync(1, 5))
+        svc.Setup(x => x.ActivateAttendanceAsync(InstructorId, 5))
             .ThrowsAsync(new UnauthorizedAccessException("nope"));
 
         var controller = CreateController(svc.Object);
-        var response = await controller.ActivateAttendance(5);
+        var response = await controller.ActivateAttendance(InstructorId, 5);
 
         Assert.IsType<UnauthorizedObjectResult>(response);
     }
@@ -56,11 +59,11 @@ public class InstructorSessionsControllerTests
     public async Task DeactivateAttendance_ReturnsBadRequest_WhenServiceThrowsArgumentException()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.DeactivateAttendanceAsync(1, 5))
+        svc.Setup(x => x.DeactivateAttendanceAsync(InstructorId, 5))
             .ThrowsAsync(new ArgumentException("bad"));
 
         var controller = CreateController(svc.Object);
-        var response = await controller.DeactivateAttendance(5);
+        var response = await controller.DeactivateAttendance(InstructorId, 5);
 
         Assert.IsType<BadRequestObjectResult>(response);
     }
@@ -69,11 +72,11 @@ public class InstructorSessionsControllerTests
     public async Task IssueQrToken_ReturnsOk()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.IssueQrTokenAsync(1, 5))
+        svc.Setup(x => x.IssueQrTokenAsync(InstructorId, 5))
             .ReturnsAsync(new QrTokenResponseDto { SessionId = 5, Token = "t" });
 
         var controller = CreateController(svc.Object);
-        var response = await controller.IssueQrToken(5);
+        var response = await controller.IssueQrToken(InstructorId, 5);
 
         Assert.IsType<OkObjectResult>(response);
     }
@@ -82,11 +85,11 @@ public class InstructorSessionsControllerTests
     public async Task GetAttendance_ReturnsNotFound_WhenServiceThrowsKeyNotFound()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.GetSessionAttendanceAsync(1, 5))
+        svc.Setup(x => x.GetSessionAttendanceAsync(InstructorId, 5))
             .ThrowsAsync(new KeyNotFoundException("missing"));
 
         var controller = CreateController(svc.Object);
-        var response = await controller.GetAttendance(5);
+        var response = await controller.GetAttendance(InstructorId, 5);
 
         Assert.IsType<NotFoundObjectResult>(response);
     }
@@ -95,11 +98,11 @@ public class InstructorSessionsControllerTests
     public async Task GetAttendanceSummary_ReturnsOk()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.GetSessionAttendanceSummaryAsync(1, 5))
+        svc.Setup(x => x.GetSessionAttendanceSummaryAsync(InstructorId, 5))
             .ReturnsAsync(new AttendanceSummaryDto { SessionId = 5, TotalStudents = 10 });
 
         var controller = CreateController(svc.Object);
-        var response = await controller.GetAttendanceSummary(5);
+        var response = await controller.GetAttendanceSummary(InstructorId, 5);
 
         Assert.IsType<OkObjectResult>(response);
     }
@@ -108,11 +111,11 @@ public class InstructorSessionsControllerTests
     public async Task UpdateAttendance_ReturnsOk()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.UpdateAttendanceAsync(1, 5, 7, It.IsAny<UpdateAttendanceDto>()))
-            .ReturnsAsync(new AttendanceDto { SessionId = 5, StudentId = 7, Status = "Present" });
+        svc.Setup(x => x.UpdateAttendanceAsync(InstructorId, 5, StudentId, It.IsAny<UpdateAttendanceDto>()))
+            .ReturnsAsync(new AttendanceDto { SessionId = 5, StudentId = StudentId, Status = "Present" });
 
         var controller = CreateController(svc.Object);
-        var response = await controller.UpdateAttendance(5, 7, new UpdateAttendanceDto { Status = "Present" });
+        var response = await controller.UpdateAttendance(InstructorId, 5, StudentId, new UpdateAttendanceDto { Status = "Present" });
 
         Assert.IsType<OkObjectResult>(response);
     }
@@ -121,10 +124,10 @@ public class InstructorSessionsControllerTests
     public async Task FinalizeAttendance_ReturnsNoContent_OnSuccess()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.FinalizeAttendanceAsync(1, 5)).Returns(Task.CompletedTask);
+        svc.Setup(x => x.FinalizeAttendanceAsync(InstructorId, 5)).Returns(Task.CompletedTask);
 
         var controller = CreateController(svc.Object);
-        var response = await controller.FinalizeAttendance(5);
+        var response = await controller.FinalizeAttendance(InstructorId, 5);
 
         Assert.IsType<NoContentResult>(response);
     }
@@ -133,12 +136,11 @@ public class InstructorSessionsControllerTests
     public async Task BulkMarkAbsent_ReturnsNoContent_OnSuccess()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.BulkMarkAbsentAsync(1, 5)).Returns(Task.CompletedTask);
+        svc.Setup(x => x.BulkMarkAbsentAsync(InstructorId, 5)).Returns(Task.CompletedTask);
 
         var controller = CreateController(svc.Object);
-        var response = await controller.BulkMarkAbsent(5);
+        var response = await controller.BulkMarkAbsent(InstructorId, 5);
 
         Assert.IsType<NoContentResult>(response);
     }
 }
-

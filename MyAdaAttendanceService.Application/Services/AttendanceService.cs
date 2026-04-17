@@ -16,6 +16,7 @@ public class AttendanceService : IAttendanceService
     private readonly ILessonEnrollmentRepository _enrollmentRepository;
     private readonly IAttendanceActivationRepository _activationRepository;
     private readonly IAttendanceScanLogRepository _scanLogRepository;
+    private readonly IExternalUserDirectoryService _userDirectoryService;
     private readonly IConfiguration _configuration;
 
     public AttendanceService(
@@ -24,6 +25,7 @@ public class AttendanceService : IAttendanceService
         ILessonEnrollmentRepository enrollmentRepository,
         IAttendanceActivationRepository activationRepository,
         IAttendanceScanLogRepository scanLogRepository,
+        IExternalUserDirectoryService userDirectoryService,
         IConfiguration configuration)
     {
         _attendanceRepository = attendanceRepository;
@@ -31,10 +33,11 @@ public class AttendanceService : IAttendanceService
         _enrollmentRepository = enrollmentRepository;
         _activationRepository = activationRepository;
         _scanLogRepository = scanLogRepository;
+        _userDirectoryService = userDirectoryService;
         _configuration = configuration;
     }
 
-    public async Task<AttendanceActivationResultDto> ActivateAttendanceAsync(int instructorId, int sessionId)
+    public async Task<AttendanceActivationResultDto> ActivateAttendanceAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
         var activeActivation = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
@@ -66,7 +69,7 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<AttendanceActivationResultDto> DeactivateAttendanceAsync(int instructorId, int sessionId)
+    public async Task<AttendanceActivationResultDto> DeactivateAttendanceAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
         var activation = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
@@ -94,7 +97,7 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<QrTokenResponseDto> IssueQrTokenAsync(int instructorId, int sessionId)
+    public async Task<QrTokenResponseDto> IssueQrTokenAsync(Guid instructorId, int sessionId)
     {
         _ = await GetVerifiedSessionAsync(instructorId, sessionId);
         var activation = await _activationRepository.GetActiveBySessionIdAsync(sessionId)
@@ -123,12 +126,12 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<IEnumerable<AttendanceDto>> GetSessionAttendanceAsync(int instructorId, int sessionId)
+    public async Task<IEnumerable<AttendanceDto>> GetSessionAttendanceAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
         var records = await _attendanceRepository.GetBySessionIdAsync(sessionId);
-
-        return records.Select(r => MapToAttendanceDto(r, session.LessonId));
+        var users = await _userDirectoryService.GetUsersByIdsAsync(records.Select(x => x.StudentId));
+        return records.Select(r => MapToAttendanceDto(r, session.LessonId, users.GetValueOrDefault(r.StudentId)));
     }
 
     public async Task<IEnumerable<AttendanceDto>> GetSessionAttendanceAdminAsync(int sessionId)
@@ -137,10 +140,11 @@ public class AttendanceService : IAttendanceService
             ?? throw new KeyNotFoundException($"Session {sessionId} not found.");
 
         var records = await _attendanceRepository.GetBySessionIdAsync(sessionId);
-        return records.Select(r => MapToAttendanceDto(r, session.LessonId));
+        var users = await _userDirectoryService.GetUsersByIdsAsync(records.Select(x => x.StudentId));
+        return records.Select(r => MapToAttendanceDto(r, session.LessonId, users.GetValueOrDefault(r.StudentId)));
     }
 
-    public async Task<AttendanceSummaryDto> GetSessionAttendanceSummaryAsync(int instructorId, int sessionId)
+    public async Task<AttendanceSummaryDto> GetSessionAttendanceSummaryAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
         var records = await _attendanceRepository.GetBySessionIdAsync(sessionId);
@@ -157,9 +161,13 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<QrScanResponseDto> MarkAttendanceByQrAsync(int studentId, QrScanRequestDto dto)
+    public async Task<QrScanResponseDto> MarkAttendanceByQrAsync(QrScanRequestDto dto)
     {
+        var studentId = dto.StudentId;
         var scannedAt = DateTime.UtcNow;
+        if (studentId == Guid.Empty)
+            return await RejectScanAsync(studentId, scannedAt, "student_id_missing", null, dto.DeviceInfo);
+
         if (string.IsNullOrWhiteSpace(dto.Token))
             return await RejectScanAsync(studentId, scannedAt, "token_missing", null, dto.DeviceInfo);
 
@@ -173,6 +181,15 @@ public class AttendanceService : IAttendanceService
         var activation = await _activationRepository.GetByIdAsync(payload.ActivationId);
         if (!activation.IsActive || activation.SessionId != payload.SessionId)
             return await RejectScanAsync(studentId, scannedAt, "activation_inactive", payload, dto.DeviceInfo);
+
+        if (dto.QrContext?.SessionId is int contextSessionId && contextSessionId != payload.SessionId)
+            return await RejectScanAsync(studentId, scannedAt, "context_session_mismatch", payload, dto.DeviceInfo);
+
+        if (dto.QrContext?.RoundCount is int contextRoundCount && contextRoundCount != payload.ActivationId)
+            return await RejectScanAsync(studentId, scannedAt, "context_round_mismatch", payload, dto.DeviceInfo);
+
+        if (!ValidateInstructorSessionLinkage(dto.QrContext?.InstructorJwt, session))
+            return await RejectScanAsync(studentId, scannedAt, "instructor_context_mismatch", payload, dto.DeviceInfo);
 
         var sessionStart = session.Date.ToDateTime(session.StartTime);
         var sessionEnd = session.Date.ToDateTime(session.EndTime);
@@ -238,6 +255,7 @@ public class AttendanceService : IAttendanceService
         {
             Success = true,
             Message = "Scan accepted.",
+            StudentId = studentId,
             SessionId = payload.SessionId,
             ActivationId = payload.ActivationId,
             ValidScanCount = validScanCount,
@@ -246,7 +264,7 @@ public class AttendanceService : IAttendanceService
         };
     }
 
-    public async Task<AttendanceDto> UpdateAttendanceAsync(int instructorId, int sessionId, int studentId, UpdateAttendanceDto dto)
+    public async Task<AttendanceDto> UpdateAttendanceAsync(Guid instructorId, int sessionId, Guid studentId, UpdateAttendanceDto dto)
     {
         var session = await _sessionRepository.GetByIdWithLessonAsync(sessionId)
             ?? throw new KeyNotFoundException("Session not found.");
@@ -277,10 +295,11 @@ public class AttendanceService : IAttendanceService
         else
             await _attendanceRepository.UpdateAsync(attendance);
 
-        return MapToAttendanceDto(attendance, session.LessonId);
+        var user = await _userDirectoryService.GetUserByIdAsync(studentId);
+        return MapToAttendanceDto(attendance, session.LessonId, user);
     }
 
-    public async Task FinalizeAttendanceAsync(int instructorId, int sessionId)
+    public async Task FinalizeAttendanceAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
         var activation = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
@@ -334,7 +353,7 @@ public class AttendanceService : IAttendanceService
         }
     }
 
-    public async Task BulkMarkAbsentAsync(int instructorId, int sessionId)
+    public async Task BulkMarkAbsentAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
 
@@ -358,7 +377,7 @@ public class AttendanceService : IAttendanceService
         }
     }
 
-    private async Task<LessonSession> GetVerifiedSessionAsync(int instructorId, int sessionId)
+    private async Task<LessonSession> GetVerifiedSessionAsync(Guid instructorId, int sessionId)
     {
         var session = await _sessionRepository.GetByIdWithLessonAsync(sessionId)
             ?? throw new KeyNotFoundException($"Session {sessionId} not found.");
@@ -370,7 +389,7 @@ public class AttendanceService : IAttendanceService
     }
 
     private async Task<QrScanResponseDto> RejectScanAsync(
-        int studentId,
+        Guid studentId,
         DateTime scannedAt,
         string reason,
         QrTokenPayload? payload,
@@ -392,13 +411,34 @@ public class AttendanceService : IAttendanceService
         return new QrScanResponseDto
         {
             Success = false,
-            Message = reason,
+            ErrorCode = reason,
+            Message = MapRejectReason(reason),
+            StudentId = studentId,
             SessionId = payload?.SessionId ?? 0,
             ActivationId = payload?.ActivationId,
             ValidScanCount = 0,
             ScannedAt = scannedAt
         };
     }
+
+    private static string MapRejectReason(string reason) => reason switch
+    {
+        "student_id_missing" => "Student id is required.",
+        "token_missing" => "QR token is required.",
+        "invalid_token_format" => "QR token format is invalid.",
+        "invalid_token_signature" => "QR token signature is invalid.",
+        "invalid_token_payload" => "QR token payload is invalid.",
+        "token_expired" => "QR token has expired.",
+        "session_not_found" => "Session from QR token was not found.",
+        "activation_inactive" => "Attendance round is inactive.",
+        "context_session_mismatch" => "QR context session does not match token session.",
+        "context_round_mismatch" => "QR context round does not match active attendance round.",
+        "instructor_context_mismatch" => "QR instructor context does not match this session instructor.",
+        "outside_attendance_window" => "Scan is outside the attendance time window.",
+        "student_not_enrolled" => "Student is not enrolled in this lesson.",
+        "replay_token" => "This QR token was already used by this student.",
+        _ => "Attendance scan could not be processed."
+    };
 
     private string SignToken(QrTokenPayload payload)
     {
@@ -487,12 +527,66 @@ public class AttendanceService : IAttendanceService
         return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
     }
 
-    private static AttendanceDto MapToAttendanceDto(SessionAttendance record, int lessonId) => new()
+    private static bool ValidateInstructorSessionLinkage(string? instructorJwt, LessonSession session)
+    {
+        if (string.IsNullOrWhiteSpace(instructorJwt))
+            return true;
+
+        if (session.Lesson is null)
+            return false;
+
+        return TryExtractGuidFromJwt(instructorJwt, out var instructorIdFromToken)
+            && instructorIdFromToken == session.Lesson.InstructorId;
+    }
+
+    private static bool TryExtractGuidFromJwt(string jwt, out Guid userId)
+    {
+        userId = Guid.Empty;
+        var parts = jwt.Split('.');
+        if (parts.Length < 2)
+            return false;
+
+        try
+        {
+            var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(parts[1]));
+            using var document = JsonDocument.Parse(payloadJson);
+            var root = document.RootElement;
+
+            if (TryGetGuidClaim(root, "sub", out userId) ||
+                TryGetGuidClaim(root, "nameid", out userId) ||
+                TryGetGuidClaim(root, "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", out userId))
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryGetGuidClaim(JsonElement root, string claimName, out Guid value)
+    {
+        value = Guid.Empty;
+        if (!root.TryGetProperty(claimName, out var claimElement) || claimElement.ValueKind != JsonValueKind.String)
+            return false;
+
+        return Guid.TryParse(claimElement.GetString(), out value);
+    }
+
+    private static AttendanceDto MapToAttendanceDto(
+        SessionAttendance record,
+        int lessonId,
+        ExternalUserDirectoryDto? student = null) => new()
     {
         Id = record.Id,
         SessionId = record.SessionId,
         LessonId = lessonId,
         StudentId = record.StudentId,
+        StudentFullName = student?.DisplayName ?? string.Empty,
+        StudentCode = student?.UserName ?? string.Empty,
         Status = record.Status.ToString(),
         MarkedAt = record.MarkedAt,
         MarkedSource = record.MarkedSource.ToString(),

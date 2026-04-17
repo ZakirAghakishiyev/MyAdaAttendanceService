@@ -6,7 +6,7 @@ public class AttendanceDto
     public int SessionId { get; set; }
     public int LessonId { get; set; }
 
-    public int StudentId { get; set; }
+    public Guid StudentId { get; set; }
     public string StudentFullName { get; set; } = string.Empty;
     public string StudentCode { get; set; } = string.Empty;
 
@@ -14,7 +14,7 @@ public class AttendanceDto
     public DateTime? MarkedAt { get; set; }
     public string? MarkedSource { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public int? UpdatedBy { get; set; }
+    public Guid? UpdatedBy { get; set; }
 
     public DateTime? FirstScanAt { get; set; }
     public DateTime? LastScanAt { get; set; }

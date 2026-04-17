@@ -30,8 +30,8 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CreatedByInstructorId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("CreatedByInstructorId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("timestamp with time zone");
@@ -67,13 +67,16 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("DeviceInfo")
-                        .HasColumnType("text");
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("IpAddress")
-                        .HasColumnType("text");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("RejectReason")
-                        .HasColumnType("text");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTime>("ScannedAt")
                         .HasColumnType("timestamp with time zone");
@@ -81,16 +84,115 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                     b.Property<int>("SessionId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StudentId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("TokenJti")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.HasKey("Id");
 
                     b.ToTable("AttendanceScanLogs");
+                });
+
+            modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.Course", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("Credits")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("TimesPerWeek")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Department", "Code")
+                        .IsUnique();
+
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.ExternalUserDirectoryEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("SyncedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UserType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex("Role", "UserName");
+
+                    b.ToTable("ExternalUserDirectoryEntries");
                 });
 
             modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.Lesson", b =>
@@ -101,46 +203,36 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AcademicYear")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CRN")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
 
-                    b.Property<int>("Capacity")
+                    b.Property<int>("CourseId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("InstructorId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("Credits")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("InstructorId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("MaxCapacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("Capacity");
 
                     b.Property<int>("RoomId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Semester")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("TimesPerWeek")
+                    b.Property<int>("Semester")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("AcademicYear", "Semester", "CRN")
+                        .IsUnique();
 
                     b.ToTable("Lessons");
                 });
@@ -156,8 +248,8 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                     b.Property<int>("LessonId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StudentId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -196,7 +288,8 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                         .HasColumnType("time without time zone");
 
                     b.Property<string>("Topic")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -240,7 +333,8 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("InstructorNote")
-                        .HasColumnType("text");
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
 
                     b.Property<bool>("IsManuallyAdjusted")
                         .HasColumnType("boolean");
@@ -260,14 +354,14 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StudentId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -286,7 +380,8 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
 
                     b.Property<string>("Day")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time without time zone");
@@ -308,6 +403,17 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.Lesson", b =>
+                {
+                    b.HasOne("MyAdaAttendanceService.Core.Entities.Course", "Course")
+                        .WithMany("Lessons")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.LessonEnrollment", b =>
@@ -360,6 +466,11 @@ namespace MyAdaAttendanceService.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.Course", b =>
+                {
+                    b.Navigation("Lessons");
                 });
 
             modelBuilder.Entity("MyAdaAttendanceService.Core.Entities.Lesson", b =>

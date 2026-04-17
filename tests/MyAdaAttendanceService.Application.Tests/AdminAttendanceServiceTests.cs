@@ -8,11 +8,13 @@ namespace MyAdaAttendanceService.Application.Tests;
 
 public class AdminAttendanceServiceTests
 {
+    private static readonly Guid StudentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
     [Fact]
     public async Task FixAttendanceAsync_Throws_WhenStatusInvalid()
     {
         var attendanceRepo = new Mock<ISessionAttendanceRepository>();
-        attendanceRepo.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(new SessionAttendance { Id = 1, SessionId = 10, StudentId = 7 });
+        attendanceRepo.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(new SessionAttendance { Id = 1, SessionId = 10, StudentId = StudentId });
 
         var sessionRepo = new Mock<ILessonSessionRepository>();
         var service = new AdminAttendanceService(attendanceRepo.Object, sessionRepo.Object);
@@ -25,7 +27,7 @@ public class AdminAttendanceServiceTests
     [Fact]
     public async Task FixAttendanceAsync_UpdatesAttendanceAndReturnsDto()
     {
-        var attendance = new SessionAttendance { Id = 1, SessionId = 10, StudentId = 7, Status = AttendanceStatus.Absent };
+        var attendance = new SessionAttendance { Id = 1, SessionId = 10, StudentId = StudentId, Status = AttendanceStatus.Absent };
 
         var attendanceRepo = new Mock<ISessionAttendanceRepository>();
         attendanceRepo.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(attendance);
@@ -49,7 +51,7 @@ public class AdminAttendanceServiceTests
     [Fact]
     public async Task FixAttendanceAsync_SetsIsManuallyAdjustedTrue()
     {
-        var attendance = new SessionAttendance { Id = 1, SessionId = 10, StudentId = 7, IsManuallyAdjusted = false };
+        var attendance = new SessionAttendance { Id = 1, SessionId = 10, StudentId = StudentId, IsManuallyAdjusted = false };
         var attendanceRepo = new Mock<ISessionAttendanceRepository>();
         attendanceRepo.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(attendance);
         attendanceRepo.Setup(x => x.UpdateAsync(attendance)).ReturnsAsync(attendance);
