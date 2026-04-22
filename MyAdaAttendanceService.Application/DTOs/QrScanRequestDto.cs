@@ -12,5 +12,5 @@ public class QrContextDto
 {
     public int? SessionId { get; set; }
     public int? RoundCount { get; set; }
-    public string? InstructorJwt { get; set; }
+    public Guid? InstructorId { get; set; }
 }

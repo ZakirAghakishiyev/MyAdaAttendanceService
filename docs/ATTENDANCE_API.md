@@ -88,7 +88,7 @@ Same behavior: validates QR token and records attendance for `studentId` from pa
 |-----------------|---------|-------|
 | `sessionId`     | int?    | If present, must match token session |
 | `roundCount`    | int?    | If present, must match token activation id |
-| `instructorJwt` | string? | If present, instructor id in JWT must match session instructor |
+| `instructorId`  | guid?   | If present, must match token/session instructor |
 
 **Response — `QrScanResponseDto`:**
 

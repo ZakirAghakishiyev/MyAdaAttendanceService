@@ -188,7 +188,7 @@ public class AttendanceService : IAttendanceService
         if (dto.QrContext?.RoundCount is int contextRoundCount && contextRoundCount != payload.ActivationId)
             return await RejectScanAsync(studentId, scannedAt, "context_round_mismatch", payload, dto.DeviceInfo);
 
-        if (!ValidateInstructorSessionLinkage(dto.QrContext?.InstructorJwt, session))
+        if (!ValidateInstructorSessionLinkage(dto.QrContext?.InstructorId, session))
             return await RejectScanAsync(studentId, scannedAt, "instructor_context_mismatch", payload, dto.DeviceInfo);
 
         var sessionStart = session.Date.ToDateTime(session.StartTime);
@@ -527,53 +527,15 @@ public class AttendanceService : IAttendanceService
         return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
     }
 
-    private static bool ValidateInstructorSessionLinkage(string? instructorJwt, LessonSession session)
+    private static bool ValidateInstructorSessionLinkage(Guid? instructorIdFromContext, LessonSession session)
     {
-        if (string.IsNullOrWhiteSpace(instructorJwt))
+        if (!instructorIdFromContext.HasValue)
             return true;
 
         if (session.Lesson is null)
             return false;
 
-        return TryExtractGuidFromJwt(instructorJwt, out var instructorIdFromToken)
-            && instructorIdFromToken == session.Lesson.InstructorId;
-    }
-
-    private static bool TryExtractGuidFromJwt(string jwt, out Guid userId)
-    {
-        userId = Guid.Empty;
-        var parts = jwt.Split('.');
-        if (parts.Length < 2)
-            return false;
-
-        try
-        {
-            var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(parts[1]));
-            using var document = JsonDocument.Parse(payloadJson);
-            var root = document.RootElement;
-
-            if (TryGetGuidClaim(root, "sub", out userId) ||
-                TryGetGuidClaim(root, "nameid", out userId) ||
-                TryGetGuidClaim(root, "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", out userId))
-            {
-                return true;
-            }
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool TryGetGuidClaim(JsonElement root, string claimName, out Guid value)
-    {
-        value = Guid.Empty;
-        if (!root.TryGetProperty(claimName, out var claimElement) || claimElement.ValueKind != JsonValueKind.String)
-            return false;
-
-        return Guid.TryParse(claimElement.GetString(), out value);
+        return instructorIdFromContext.Value == session.Lesson.InstructorId;
     }
 
     private static AttendanceDto MapToAttendanceDto(
