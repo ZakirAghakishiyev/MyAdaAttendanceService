@@ -1,16 +1,24 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using MyAdaAttendanceService.Application.DTOs;
 using MyAdaAttendanceService.Application.Services.Interfaces;
 using MyAdaAttendanceService.Core.Entities;
 using MyAdaAttendanceService.Core.Interfaces;
-using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 
 namespace MyAdaAttendanceService.Application.Services;
 
 public class AttendanceService : IAttendanceService
 {
+    private const string ClaimSession = "sid";
+    private const string ClaimActivation = "aid";
+    private const string ClaimRound = "rnd";
+    private const string ClaimInstructor = "ins";
+    private const string DefaultIssuer = "MyAda.Attendance.Qr";
+    private const string DefaultAudience = "MyAda.Attendance.Qr";
+
     private readonly ISessionAttendanceRepository _attendanceRepository;
     private readonly ILessonSessionRepository _sessionRepository;
     private readonly ILessonEnrollmentRepository _enrollmentRepository;
@@ -37,22 +45,40 @@ public class AttendanceService : IAttendanceService
         _configuration = configuration;
     }
 
-    public async Task<AttendanceActivationResultDto> ActivateAttendanceAsync(Guid instructorId, int sessionId)
+    public async Task<AttendanceActivationResultDto> ActivateAttendanceForRoundAsync(
+        Guid instructorId,
+        int sessionId,
+        int round)
     {
+        if (round is < 1 or > 2)
+            throw new ArgumentException("Round must be 1 or 2.");
+
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
-        var activeActivation = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
-        if (activeActivation is not null)
-            throw new InvalidOperationException("Attendance is already active for this session.");
+        if (await _activationRepository.GetActiveBySessionIdAsync(sessionId) is not null)
+            throw new InvalidOperationException("A round is already active. Close it before starting another.");
+
+        if (round == 1)
+        {
+            if (await _activationRepository.HasClosedActivationForRoundAsync(sessionId, 1))
+                throw new InvalidOperationException("Round 1 was already completed for this session.");
+        }
+        else
+        {
+            if (!await _activationRepository.HasClosedActivationForRoundAsync(sessionId, 1))
+                throw new InvalidOperationException("Close round 1 before activating round 2.");
+            if (await _activationRepository.HasClosedActivationForRoundAsync(sessionId, 2))
+                throw new InvalidOperationException("Round 2 was already completed for this session.");
+        }
 
         var now = DateTime.UtcNow;
         var activation = new AttendanceActivation
         {
             SessionId = sessionId,
+            Round = (byte)round,
             StartedAt = now,
             IsActive = true,
             CreatedByInstructorId = instructorId
         };
-
         await _activationRepository.AddAsync(activation);
 
         session.IsAttendanceActive = true;
@@ -63,25 +89,34 @@ public class AttendanceService : IAttendanceService
         return new AttendanceActivationResultDto
         {
             SessionId = sessionId,
+            Round = (byte)round,
             IsAttendanceActive = true,
             AttendanceActivatedAt = now,
-            Message = "Attendance activated successfully."
+            Message = round == 1
+                ? "Round 1 (on-time) attendance is active."
+                : "Round 2 (late) attendance is active."
         };
     }
 
-    public async Task<AttendanceActivationResultDto> DeactivateAttendanceAsync(Guid instructorId, int sessionId)
+    public async Task<AttendanceActivationResultDto> DeactivateAttendanceForRoundAsync(
+        Guid instructorId,
+        int sessionId,
+        int round)
     {
-        var session = await GetVerifiedSessionAsync(instructorId, sessionId);
-        var activation = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
-        if (activation is null)
-            throw new InvalidOperationException("Attendance is not active for this session.");
+        if (round is < 1 or > 2)
+            throw new ArgumentException("Round must be 1 or 2.");
 
-        await FinalizeAttendanceAsync(instructorId, sessionId);
+        var session = await GetVerifiedSessionAsync(instructorId, sessionId);
+        var active = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
+        if (active is null)
+            throw new InvalidOperationException("No round is currently active for this session.");
+        if (active.Round != round)
+            throw new InvalidOperationException($"The active round is {active.Round}, not {round}.");
 
         var now = DateTime.UtcNow;
-        activation.IsActive = false;
-        activation.EndedAt = now;
-        await _activationRepository.UpdateAsync(activation);
+        active.IsActive = false;
+        active.EndedAt = now;
+        await _activationRepository.UpdateAsync(active);
 
         session.IsAttendanceActive = false;
         session.AttendanceDeactivatedAt = now;
@@ -90,38 +125,44 @@ public class AttendanceService : IAttendanceService
         return new AttendanceActivationResultDto
         {
             SessionId = sessionId,
+            Round = (byte)round,
             IsAttendanceActive = false,
             AttendanceActivatedAt = session.AttendanceActivatedAt,
             AttendanceDeactivatedAt = now,
-            Message = "Attendance deactivated successfully."
+            Message = "Attendance round closed."
         };
     }
 
     public async Task<QrTokenResponseDto> IssueQrTokenAsync(Guid instructorId, int sessionId)
     {
-        _ = await GetVerifiedSessionAsync(instructorId, sessionId);
+        var session = await GetVerifiedSessionAsync(instructorId, sessionId);
         var activation = await _activationRepository.GetActiveBySessionIdAsync(sessionId)
-            ?? throw new KeyNotFoundException("Attendance is not active for this session.");
+            ?? throw new KeyNotFoundException("No attendance round is active for this session. Activate round 1 or 2 first.");
 
         var now = DateTime.UtcNow;
         var lifetimeSeconds = 15;
         if (int.TryParse(_configuration["QrToken:LifetimeSeconds"], out var parsed) && parsed > 0)
             lifetimeSeconds = parsed;
         var expiresAt = now.AddSeconds(lifetimeSeconds);
-        var tokenPayload = new QrTokenPayload
-        {
-            SessionId = sessionId,
-            ActivationId = activation.Id,
-            Jti = Guid.NewGuid().ToString("N"),
-            Iat = new DateTimeOffset(now).ToUnixTimeSeconds(),
-            Exp = new DateTimeOffset(expiresAt).ToUnixTimeSeconds()
-        };
+        var jti = Guid.NewGuid().ToString("N");
+
+        var token = CreateQrJwt(
+            new QrTokenPayloadModel
+            {
+                Jti = jti,
+                SessionId = sessionId,
+                ActivationId = activation.Id,
+                Round = activation.Round,
+                InstructorId = instructorId
+            },
+            expiresAt);
 
         return new QrTokenResponseDto
         {
             SessionId = sessionId,
             ActivationId = activation.Id,
-            Token = SignToken(tokenPayload),
+            Round = activation.Round,
+            Token = token,
             ExpiresAt = expiresAt
         };
     }
@@ -168,63 +209,79 @@ public class AttendanceService : IAttendanceService
         if (studentId == Guid.Empty)
             return await RejectScanAsync(studentId, scannedAt, "student_id_missing", null, dto.DeviceInfo);
 
-        if (string.IsNullOrWhiteSpace(dto.Token))
+        var (jwtPortion, appendedStudentId) = ParseBoundStudentFromToken(dto.Token);
+        if (string.IsNullOrWhiteSpace(jwtPortion))
             return await RejectScanAsync(studentId, scannedAt, "token_missing", null, dto.DeviceInfo);
+        if (appendedStudentId is { } appId && appId != studentId)
+            return await RejectScanAsync(studentId, scannedAt, "student_token_mismatch", null, dto.DeviceInfo);
 
-        if (!TryValidateToken(dto.Token, out var payload, out var rejectReason))
-            return await RejectScanAsync(studentId, scannedAt, rejectReason ?? "invalid_token", payload, dto.DeviceInfo);
+        if (!TryValidateQrJwt(jwtPortion, out var tokenPayload, out var rejectReason))
+            return await RejectScanAsync(studentId, scannedAt, rejectReason ?? "invalid_token", null, dto.DeviceInfo);
 
-        var session = await _sessionRepository.GetByIdWithLessonAsync(payload!.SessionId);
+        var session = await _sessionRepository.GetByIdWithLessonAsync(tokenPayload!.SessionId);
         if (session is null)
-            return await RejectScanAsync(studentId, scannedAt, "session_not_found", payload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "session_not_found", tokenPayload, dto.DeviceInfo);
 
-        var activation = await _activationRepository.GetByIdAsync(payload.ActivationId);
-        if (!activation.IsActive || activation.SessionId != payload.SessionId)
-            return await RejectScanAsync(studentId, scannedAt, "activation_inactive", payload, dto.DeviceInfo);
+        if (session.Lesson!.InstructorId != tokenPayload.InstructorId)
+            return await RejectScanAsync(studentId, scannedAt, "instructor_mismatch", tokenPayload, dto.DeviceInfo);
 
-        if (dto.QrContext?.SessionId is int contextSessionId && contextSessionId != payload.SessionId)
-            return await RejectScanAsync(studentId, scannedAt, "context_session_mismatch", payload, dto.DeviceInfo);
-
-        if (dto.QrContext?.RoundCount is int contextRoundCount && contextRoundCount != payload.ActivationId)
-            return await RejectScanAsync(studentId, scannedAt, "context_round_mismatch", payload, dto.DeviceInfo);
-
-        if (!ValidateInstructorSessionLinkage(dto.QrContext?.InstructorId, session))
-            return await RejectScanAsync(studentId, scannedAt, "instructor_context_mismatch", payload, dto.DeviceInfo);
+        var activation = await _activationRepository.GetByIdAsync(tokenPayload.ActivationId);
+        if (activation is null
+            || !activation.IsActive
+            || activation.SessionId != tokenPayload.SessionId
+            || activation.Round != tokenPayload.Round)
+        {
+            return await RejectScanAsync(studentId, scannedAt, "activation_inactive", tokenPayload, dto.DeviceInfo);
+        }
 
         var sessionStart = session.Date.ToDateTime(session.StartTime);
         var sessionEnd = session.Date.ToDateTime(session.EndTime);
         if (scannedAt < sessionStart.AddMinutes(-30) || scannedAt > sessionEnd.AddMinutes(30))
-            return await RejectScanAsync(studentId, scannedAt, "outside_attendance_window", payload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "outside_attendance_window", tokenPayload, dto.DeviceInfo);
 
         var isEnrolled = await _enrollmentRepository.ExistsAsync(session.LessonId, studentId);
         if (!isEnrolled)
-            return await RejectScanAsync(studentId, scannedAt, "student_not_enrolled", payload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "student_not_enrolled", tokenPayload, dto.DeviceInfo);
 
-        var alreadyUsed = await _scanLogRepository.ExistsAcceptedByTokenAsync(payload.SessionId, studentId, payload.Jti);
-        if (alreadyUsed)
-            return await RejectScanAsync(studentId, scannedAt, "replay_token", payload, dto.DeviceInfo);
+        if (await _scanLogRepository.HasAcceptedScanInRoundAsync(
+                tokenPayload.SessionId,
+                studentId,
+                tokenPayload.Round))
+        {
+            return await RejectScanAsync(studentId, scannedAt, "already_scanned_this_round", tokenPayload, dto.DeviceInfo);
+        }
+
+        var alreadyUsedJti = await _scanLogRepository.ExistsAcceptedByTokenAsync(
+            tokenPayload.SessionId,
+            studentId,
+            tokenPayload.Jti);
+        if (alreadyUsedJti)
+            return await RejectScanAsync(studentId, scannedAt, "replay_token", tokenPayload, dto.DeviceInfo);
 
         await _scanLogRepository.AddAsync(new AttendanceScanLog
         {
-            SessionId = payload.SessionId,
+            SessionId = tokenPayload.SessionId,
             StudentId = studentId,
-            ActivationId = payload.ActivationId,
-            TokenJti = payload.Jti,
+            ActivationId = tokenPayload.ActivationId,
+            Round = tokenPayload.Round,
+            TokenJti = tokenPayload.Jti,
             ScannedAt = scannedAt,
             Accepted = true,
             IpAddress = null,
             DeviceInfo = dto.DeviceInfo
         });
 
-        var validScanCount = await _scanLogRepository.CountAcceptedScansAsync(payload.SessionId, studentId, payload.ActivationId);
-        var computedStatus = validScanCount >= 2 ? AttendanceStatus.Present : AttendanceStatus.Late;
-        var attendance = await _attendanceRepository.GetBySessionAndStudentAsync(payload.SessionId, studentId);
+        var distinctRounds = await _scanLogRepository.CountDistinctRoundsScannedAsync(tokenPayload.SessionId, studentId);
+        var computedStatus = distinctRounds >= 2
+            ? AttendanceStatus.Present
+            : AttendanceStatus.Late;
 
+        var attendance = await _attendanceRepository.GetBySessionAndStudentAsync(tokenPayload.SessionId, studentId);
         if (attendance is null)
         {
             attendance = new SessionAttendance
             {
-                SessionId = payload.SessionId,
+                SessionId = tokenPayload.SessionId,
                 StudentId = studentId,
                 Status = computedStatus,
                 MarkedAt = scannedAt,
@@ -256,9 +313,10 @@ public class AttendanceService : IAttendanceService
             Success = true,
             Message = "Scan accepted.",
             StudentId = studentId,
-            SessionId = payload.SessionId,
-            ActivationId = payload.ActivationId,
-            ValidScanCount = validScanCount,
+            SessionId = tokenPayload.SessionId,
+            ActivationId = tokenPayload.ActivationId,
+            Round = tokenPayload.Round,
+            ValidScanCount = distinctRounds,
             Status = attendance.Status.ToString(),
             ScannedAt = scannedAt
         };
@@ -302,29 +360,21 @@ public class AttendanceService : IAttendanceService
     public async Task FinalizeAttendanceAsync(Guid instructorId, int sessionId)
     {
         var session = await GetVerifiedSessionAsync(instructorId, sessionId);
-        var activation = await _activationRepository.GetActiveBySessionIdAsync(sessionId);
-        if (activation is null)
-        {
-            var latestActivation = await _activationRepository.GetAllAsync(
-                predicate: x => x.SessionId == sessionId,
-                orderBy: q => q.OrderByDescending(x => x.StartedAt));
-            activation = latestActivation.FirstOrDefault();
-        }
-        if (activation is null)
-            throw new KeyNotFoundException("No attendance activation exists for this session.");
+        if (await _activationRepository.GetActiveBySessionIdAsync(sessionId) is not null)
+            throw new InvalidOperationException("An attendance round is still active. Deactivate the current round before finalizing.");
 
-        var acceptedScans = await _scanLogRepository.GetAcceptedBySessionAndActivationAsync(sessionId, activation.Id);
-        var acceptedCounts = acceptedScans
+        var accepted = await _scanLogRepository.GetAcceptedBySessionIdAsync(sessionId);
+        var roundsByStudent = accepted
             .GroupBy(x => x.StudentId)
-            .ToDictionary(g => g.Key, g => g.Count());
+            .ToDictionary(g => g.Key, g => g.Select(s => s.Round).Distinct().Count());
         var enrollments = await _enrollmentRepository.GetByLessonIdAsync(session.LessonId);
 
         foreach (var enrollment in enrollments)
         {
-            acceptedCounts.TryGetValue(enrollment.StudentId, out var count);
-            var computedStatus = count >= 2
+            roundsByStudent.TryGetValue(enrollment.StudentId, out var roundCount);
+            var computedStatus = roundCount >= 2
                 ? AttendanceStatus.Present
-                : (count == 1 ? AttendanceStatus.Late : AttendanceStatus.Absent);
+                : (roundCount == 1 ? AttendanceStatus.Late : AttendanceStatus.Absent);
 
             var attendance = await _attendanceRepository.GetBySessionAndStudentAsync(sessionId, enrollment.StudentId);
             if (attendance is null)
@@ -392,21 +442,25 @@ public class AttendanceService : IAttendanceService
         Guid studentId,
         DateTime scannedAt,
         string reason,
-        QrTokenPayload? payload,
+        QrTokenPayloadModel? payload,
         string? deviceInfo)
     {
-        await _scanLogRepository.AddAsync(new AttendanceScanLog
+        if (payload is not null)
         {
-            SessionId = payload?.SessionId ?? 0,
-            StudentId = studentId,
-            ActivationId = payload?.ActivationId ?? 0,
-            TokenJti = payload?.Jti ?? string.Empty,
-            ScannedAt = scannedAt,
-            Accepted = false,
-            RejectReason = reason,
-            IpAddress = null,
-            DeviceInfo = deviceInfo
-        });
+            await _scanLogRepository.AddAsync(new AttendanceScanLog
+            {
+                SessionId = payload.SessionId,
+                StudentId = studentId,
+                ActivationId = payload.ActivationId,
+                Round = payload.Round,
+                TokenJti = payload.Jti,
+                ScannedAt = scannedAt,
+                Accepted = false,
+                RejectReason = reason,
+                IpAddress = null,
+                DeviceInfo = deviceInfo
+            });
+        }
 
         return new QrScanResponseDto
         {
@@ -416,6 +470,7 @@ public class AttendanceService : IAttendanceService
             StudentId = studentId,
             SessionId = payload?.SessionId ?? 0,
             ActivationId = payload?.ActivationId,
+            Round = payload?.Round,
             ValidScanCount = 0,
             ScannedAt = scannedAt
         };
@@ -425,117 +480,129 @@ public class AttendanceService : IAttendanceService
     {
         "student_id_missing" => "Student id is required.",
         "token_missing" => "QR token is required.",
+        "student_token_mismatch" => "The bound student in the token does not match the request.",
+        "invalid_token" => "QR token could not be read.",
         "invalid_token_format" => "QR token format is invalid.",
         "invalid_token_signature" => "QR token signature is invalid.",
         "invalid_token_payload" => "QR token payload is invalid.",
         "token_expired" => "QR token has expired.",
         "session_not_found" => "Session from QR token was not found.",
-        "activation_inactive" => "Attendance round is inactive.",
-        "context_session_mismatch" => "QR context session does not match token session.",
-        "context_round_mismatch" => "QR context round does not match active attendance round.",
-        "instructor_context_mismatch" => "QR instructor context does not match this session instructor.",
+        "instructor_mismatch" => "QR token instructor does not match the session owner.",
+        "activation_inactive" => "Attendance round is inactive or does not match the token.",
+        "already_scanned_this_round" => "This student already scanned in this round.",
         "outside_attendance_window" => "Scan is outside the attendance time window.",
         "student_not_enrolled" => "Student is not enrolled in this lesson.",
         "replay_token" => "This QR token was already used by this student.",
         _ => "Attendance scan could not be processed."
     };
 
-    private string SignToken(QrTokenPayload payload)
+    private string CreateQrJwt(QrTokenPayloadModel payload, DateTime expiresAtUtc)
     {
-        var payloadJson = JsonSerializer.Serialize(payload);
-        var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
-        var payloadPart = Base64UrlEncode(payloadBytes);
-        var signature = ComputeSignature(payloadPart);
-        return $"{payloadPart}.{signature}";
+        var key = GetSymmetricSecurityKey();
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var now = DateTime.UtcNow;
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Jti, payload.Jti),
+            new(ClaimSession, payload.SessionId.ToString()),
+            new(ClaimActivation, payload.ActivationId.ToString()),
+            new(ClaimRound, payload.Round.ToString()),
+            new(ClaimInstructor, payload.InstructorId.ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: GetQrIssuer(),
+            audience: GetQrAudience(),
+            claims: claims,
+            notBefore: now,
+            expires: expiresAtUtc,
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private bool TryValidateToken(string token, out QrTokenPayload? payload, out string? error)
+    private bool TryValidateQrJwt(string token, out QrTokenPayloadModel? model, out string? error)
     {
-        payload = null;
+        model = null;
         error = null;
-        var parts = token.Split('.');
-        if (parts.Length != 2)
-        {
-            error = "invalid_token_format";
-            return false;
-        }
-
-        var payloadPart = parts[0];
-        var signaturePart = parts[1];
-        var expectedSignature = ComputeSignature(payloadPart);
-        if (!FixedTimeEquals(signaturePart, expectedSignature))
-        {
-            error = "invalid_token_signature";
-            return false;
-        }
-
         try
         {
-            var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(payloadPart));
-            payload = JsonSerializer.Deserialize<QrTokenPayload>(payloadJson);
-            if (payload is null)
+            var key = GetSymmetricSecurityKey();
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var validation = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = GetQrIssuer(),
+                ValidateAudience = true,
+                ValidAudience = GetQrAudience(),
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromSeconds(30)
+            };
+            var principal = tokenHandler.ValidateToken(token, validation, out var vToken);
+            var jwt = (JwtSecurityToken)vToken;
+
+            if (!int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == ClaimSession)?.Value, out var sessionId) ||
+                !int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == ClaimActivation)?.Value, out var activationId) ||
+                !byte.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == ClaimRound)?.Value, out var round) ||
+                round is < 1 or > 2 ||
+                !Guid.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == ClaimInstructor)?.Value, out var instructorId))
             {
                 error = "invalid_token_payload";
                 return false;
             }
-            var nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (payload.Exp <= nowUnix)
+
+            var jti = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            if (string.IsNullOrEmpty(jti))
             {
-                error = "token_expired";
+                error = "invalid_token_payload";
                 return false;
             }
+
+            model = new QrTokenPayloadModel
+            {
+                Jti = jti,
+                SessionId = sessionId,
+                ActivationId = activationId,
+                Round = round,
+                InstructorId = instructorId
+            };
             return true;
         }
-        catch
+        catch (Exception)
         {
-            error = "invalid_token_payload";
+            error = "invalid_token";
             return false;
         }
     }
 
-    private string ComputeSignature(string payloadPart)
+    private SymmetricSecurityKey GetSymmetricSecurityKey()
     {
-        var secret = _configuration["QrToken:Secret"]
-            ?? "change_this_secret_in_configuration";
-        var secretBytes = Encoding.UTF8.GetBytes(secret);
-        using var hmac = new HMACSHA256(secretBytes);
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payloadPart));
-        return Base64UrlEncode(hash);
+        var secret = _configuration["QrToken:Secret"] ?? "change_this_secret_in_configuration";
+        if (string.IsNullOrWhiteSpace(secret))
+            throw new InvalidOperationException("QrToken:Secret must be configured.");
+        if (secret.Length < 32)
+            secret = secret.PadRight(32, 'x');
+
+        return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
     }
 
-    private static string Base64UrlEncode(byte[] input) =>
-        Convert.ToBase64String(input)
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
+    private string GetQrIssuer() => _configuration["QrToken:Issuer"] ?? DefaultIssuer;
+    private string GetQrAudience() => _configuration["QrToken:Audience"] ?? DefaultAudience;
 
-    private static byte[] Base64UrlDecode(string input)
+    private static (string JwtPortion, Guid? AppendedStudentId) ParseBoundStudentFromToken(string? raw)
     {
-        var padded = input.Replace('-', '+').Replace('_', '/');
-        switch (padded.Length % 4)
-        {
-            case 2: padded += "=="; break;
-            case 3: padded += "="; break;
-        }
-        return Convert.FromBase64String(padded);
-    }
-
-    private static bool FixedTimeEquals(string left, string right)
-    {
-        var leftBytes = Encoding.UTF8.GetBytes(left);
-        var rightBytes = Encoding.UTF8.GetBytes(right);
-        return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
-    }
-
-    private static bool ValidateInstructorSessionLinkage(Guid? instructorIdFromContext, LessonSession session)
-    {
-        if (!instructorIdFromContext.HasValue)
-            return true;
-
-        if (session.Lesson is null)
-            return false;
-
-        return instructorIdFromContext.Value == session.Lesson.InstructorId;
+        if (string.IsNullOrWhiteSpace(raw))
+            return (string.Empty, null);
+        var s = raw.Trim();
+        var pipe = s.LastIndexOf('|');
+        if (pipe <= 0)
+            return (s, null);
+        var tail = s[(pipe + 1)..].Trim();
+        if (Guid.TryParse(tail, out var g))
+            return (s[..pipe].Trim(), g);
+        return (s, null);
     }
 
     private static AttendanceDto MapToAttendanceDto(
@@ -560,12 +627,12 @@ public class AttendanceService : IAttendanceService
         InstructorNote = record.InstructorNote
     };
 
-    private sealed class QrTokenPayload
+    private sealed class QrTokenPayloadModel
     {
         public int SessionId { get; set; }
         public int ActivationId { get; set; }
+        public byte Round { get; set; }
+        public Guid InstructorId { get; set; }
         public string Jti { get; set; } = string.Empty;
-        public long Iat { get; set; }
-        public long Exp { get; set; }
     }
 }

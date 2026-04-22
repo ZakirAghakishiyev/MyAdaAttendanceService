@@ -4,8 +4,9 @@ namespace MyAdaAttendanceService.Application.Services.Interfaces;
 
 public interface IAttendanceService
 {
-    Task<AttendanceActivationResultDto> ActivateAttendanceAsync(Guid instructorId, int sessionId);
-    Task<AttendanceActivationResultDto> DeactivateAttendanceAsync(Guid instructorId, int sessionId);
+    Task<AttendanceActivationResultDto> ActivateAttendanceForRoundAsync(Guid instructorId, int sessionId, int round);
+
+    Task<AttendanceActivationResultDto> DeactivateAttendanceForRoundAsync(Guid instructorId, int sessionId, int round);
     Task<QrTokenResponseDto> IssueQrTokenAsync(Guid instructorId, int sessionId);
     Task<IEnumerable<AttendanceDto>> GetSessionAttendanceAsync(Guid instructorId, int sessionId);
 

@@ -124,3 +124,8 @@ C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.A
 C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\obj\Debug\net8.0\MyAdaAttendanceService.Application.Tests.pdb
 C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\obj\Debug\net8.0\MyAdaAttendanceService.Application.Tests.genruntimeconfig.cache
 C:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\obj\Debug\net8.0\ref\MyAdaAttendanceService.Application.Tests.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+c:\Users\User\source\repos\MyAdaAttendanceService\tests\MyAdaAttendanceService.Application.Tests\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

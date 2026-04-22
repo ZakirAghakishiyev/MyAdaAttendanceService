@@ -15,4 +15,13 @@ public class AttendanceActivationRepository : EfCoreRepository<AttendanceActivat
             .OrderByDescending(x => x.StartedAt)
             .FirstOrDefaultAsync();
     }
+
+    public async Task<bool> HasClosedActivationForRoundAsync(int sessionId, byte round)
+    {
+        return await _dbSet.AnyAsync(x =>
+            x.SessionId == sessionId &&
+            x.Round == round &&
+            !x.IsActive &&
+            x.EndedAt != null);
+    }
 }

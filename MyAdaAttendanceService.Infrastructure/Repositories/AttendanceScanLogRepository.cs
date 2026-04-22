@@ -32,4 +32,33 @@ public class AttendanceScanLogRepository : EfCoreRepository<AttendanceScanLog>, 
             .Where(x => x.SessionId == sessionId && x.ActivationId == activationId && x.Accepted)
             .ToListAsync();
     }
+
+    public async Task<int> CountDistinctRoundsScannedAsync(int sessionId, Guid studentId)
+    {
+        return await _dbSet
+            .Where(x =>
+                x.SessionId == sessionId &&
+                x.StudentId == studentId &&
+                x.Accepted &&
+                x.Round != null)
+            .Select(x => x.Round!.Value)
+            .Distinct()
+            .CountAsync();
+    }
+
+    public async Task<bool> HasAcceptedScanInRoundAsync(int sessionId, Guid studentId, byte round)
+    {
+        return await _dbSet.AnyAsync(x =>
+            x.SessionId == sessionId &&
+            x.StudentId == studentId &&
+            x.Round == round &&
+            x.Accepted);
+    }
+
+    public async Task<IReadOnlyList<AttendanceScanLog>> GetAcceptedBySessionIdAsync(int sessionId)
+    {
+        return await _dbSet
+            .Where(x => x.SessionId == sessionId && x.Accepted)
+            .ToListAsync();
+    }
 }

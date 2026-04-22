@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MyAdaAttendanceService.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+99250d5e33e828067a4ea320718a1c3f1a2445af")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dfd3098009527590c4d585ab6b2f262b3845468a")]
 [assembly: System.Reflection.AssemblyProductAttribute("MyAdaAttendanceService.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MyAdaAttendanceService.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

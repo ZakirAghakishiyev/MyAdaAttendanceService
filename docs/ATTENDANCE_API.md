@@ -62,33 +62,36 @@ Student’s **per-session** attendance rows for one lesson.
 
 ### `POST /api/students/{studentId}/attendance/scan`
 
-Marks attendance by QR token for that student (same service as `qr/scan` below). If body `studentId` is empty, route `studentId` is used.
+Validates the **QR JWT** and records a scan for `studentId` (auth-service user **GUID** in the route). If body `studentId` is empty, the route `studentId` is used.
 
-**Body:** `QrScanRequestDto`  
-**Response:** `QrScanResponseDto`
-
----
-
-### `POST /api/students/{studentId}/attendance/qr/scan`
-
-Same behavior: validates QR token and records attendance for `studentId` from payload/route.
+**Eligibility:** only students **enrolled in the session’s lesson** can scan successfully (`errorCode`: `student_not_enrolled` otherwise).
 
 **Body — `QrScanRequestDto`:**
 
 | Field         | Type    | Notes                    |
 |---------------|---------|--------------------------|
-| `studentId`   | guid    | Required logically; route id is used when omitted in body |
-| `token`       | string  | Signed QR payload from instructor |
-| `qrContext`   | object? | Optional context consistency checks |
+| `studentId`   | guid    | Route id is used when omitted in body |
+| `token`       | string  | See below |
 | `deviceInfo`  | string? | Optional client metadata |
 
-`qrContext` fields:
+**`token` field**
 
-| Field           | Type    | Notes |
-|-----------------|---------|-------|
-| `sessionId`     | int?    | If present, must match token session |
-| `roundCount`    | int?    | If present, must match token activation id |
-| `instructorId`  | guid?   | If present, must match token/session instructor |
+- The value is a **signed HS256 JWT** issued by `POST .../qr-token` while a round (1 or 2) is active. All **session context** is inside the JWT (session id, activation id, **round** `1` or `2`, instructor id, `jti`, expiry). The client does not send separate `qrContext`.
+- **Binding the user (recommended):** append a pipe and the same student’s GUID as in the request so the server can double-check:  
+  `{jwt}|{studentGuid}`  
+  If present, the GUID must match the route / body `studentId` or the scan is rejected (`student_token_mismatch`).
+
+**JWT custom claims (reference):** `sid` (session id), `aid` (activation id), `rnd` (1 or 2), `ins` (instructor user id), plus standard `jti`, `exp`, `iat`. Issuer/audience default to `MyAda.Attendance.Qr` (overridable via `QrToken:Issuer` / `QrToken:Audience`).
+
+**Attendance status from scans**
+
+| Distinct successful rounds in this session (round 1 and/or 2) | `status` after scan / at finalize* |
+|----------------------------------------------------------------|--------------------------------------|
+| 2 (scanned in round 1 and round 2) | `Present` |
+| 1 (only one round scanned) | `Late` |
+| 0 | `Absent` (after finalize) |
+
+*Live `status` updates after each successful scan; `POST .../attendance/finalize` recalculates the same rules for all enrolled students.
 
 **Response — `QrScanResponseDto`:**
 
@@ -100,11 +103,12 @@ Same behavior: validates QR token and records attendance for `studentId` from pa
 | `studentId`       | guid     | Resolved student id for this scan  |
 | `sessionId`       | int      |                                    |
 | `activationId`    | int?     |                                    |
-| `validScanCount`  | int      |                                    |
-| `status`          | string?  | e.g. attendance status when success |
+| `round`           | byte?    | `1` or `2` when success |
+| `validScanCount`  | int      | **Distinct rounds** (1 or 2) completed for this student in this session |
+| `status`          | string?  | e.g. `Present` / `Late` when success |
 | `scannedAt`       | datetime? |                                  |
 
-**Typical errors:** invalid/expired token, session not found, activation inactive, outside attendance window, not enrolled, replay token.
+**Typical errors:** invalid/expired token, session not found, activation inactive, outside attendance window, not enrolled, replay token, already scanned in this round, student/token mismatch.
 
 ---
 
@@ -114,15 +118,21 @@ Instructor endpoints use explicit `instructorId` route values.
 
 Base path: **`/api/instructors/{instructorId}/sessions`**
 
-### `POST /api/instructors/{instructorId}/sessions/{sessionId}/attendance/activate`
+### `POST /api/instructors/{instructorId}/sessions/{sessionId}/attendance/activate/{round}`
 
-Opens attendance for the session (creates/activates an activation record, marks session attendance active).
+Opens **one** attendance **round** for the session. `round` is **`1` or `2`**.
 
-**Response — `AttendanceActivationResultDto`:**
+- **Round 1** — first check-in window (e.g. on-time / first half of class). Only if round 1 has not already been completed for this session.
+- **Round 2** — second check-in window (e.g. late). Only after **round 1 is closed** (deactivated) and **round 2** has not already been completed.
+
+At most one round can be active at a time. The general flow: `activate/1` → `qr-token` (repeat as the QR refreshes) → `deactivate/1` → `activate/2` → `qr-token` → `deactivate/2` → `finalize` (see below).
+
+**Response — `AttendanceActivationResultDto`:** includes `round` (1 or 2).
 
 | Field                      | Type     |
 |----------------------------|----------|
 | `sessionId`                | int      |
+| `round`                    | byte?    | Which round was opened |
 | `isAttendanceActive`       | bool     |
 | `attendanceActivatedAt`    | datetime? |
 | `attendanceDeactivatedAt`  | datetime? |
@@ -130,17 +140,17 @@ Opens attendance for the session (creates/activates an activation record, marks 
 
 ---
 
-### `POST /api/instructors/{instructorId}/sessions/{sessionId}/attendance/deactivate`
+### `POST /api/instructors/{instructorId}/sessions/{sessionId}/attendance/deactivate/{round}`
 
-Closes attendance for the session (deactivates activation, updates session flags).
+Closes the **currently active** round. `round` must match the active round (`1` or `2`). This does **not** run finalization; it only ends the activation so the next round can be opened (or the session can be finalized).
 
-**Response:** `AttendanceActivationResultDto`
+**Response:** `AttendanceActivationResultDto` (with `round` set).
 
 ---
 
 ### `POST /api/instructors/{instructorId}/sessions/{sessionId}/qr-token`
 
-Issues a **short-lived signed JWT** (or similar) for display in a session QR code.
+Issues a **short-lived HS256 JWT** (standard three-part `header.payload.sig`) for display in a QR while **some** round is active. The JWT encodes the session, activation, round, instructor, and `jti`.
 
 **Response — `QrTokenResponseDto`:**
 
@@ -148,10 +158,11 @@ Issues a **short-lived signed JWT** (or similar) for display in a session QR cod
 |-----------------|----------|
 | `sessionId`     | int      |
 | `activationId`  | int      |
-| `token`         | string   |
+| `round`         | byte     | `1` or `2` |
+| `token`         | string   | JWT string |
 | `expiresAt`     | datetime |
 
-Lifetime may be configured (e.g. `QrToken:LifetimeSeconds` in app settings).
+Configure `QrToken:Secret` (at least 32 effective bytes; shorter values are padded in development), `QrToken:Issuer`, `QrToken:Audience`, and `QrToken:LifetimeSeconds`.
 
 ---
 
@@ -217,7 +228,7 @@ Instructor updates one **enrolled student’s** attendance row for that session.
 
 ### `POST /api/instructors/{instructorId}/sessions/{sessionId}/attendance/finalize`
 
-Finalizes attendance for the session (see `AttendanceService.FinalizeAttendanceAsync`).
+Finalizes attendance for the session. **No** attendance round may be active: close the current round with `deactivate` first. For each **enrolled** student, `Present` / `Late` / `Absent` is set from the number of **distinct successful rounds (1 and 2)** they scanned, as in the table above. Rows that are manually adjusted are left unchanged.
 
 **Body:** none  
 **Response:** typically `200` / no content per wrapper.
@@ -289,9 +300,8 @@ Documented in **`ADMIN_API.md`**; paths use explicit ids:
 | `GET` | `/api/students/{studentId}/enrollments` | Student |
 | `GET` | `/api/students/{studentId}/lessons/{lessonId}/attendance` | Student |
 | `POST` | `/api/students/{studentId}/attendance/scan` | Student |
-| `POST` | `/api/students/{studentId}/attendance/qr/scan` | Student |
-| `POST` | `/api/instructors/{instructorId}/sessions/{sessionId}/attendance/activate` | Instructor |
-| `POST` | `/api/instructors/{instructorId}/sessions/{sessionId}/attendance/deactivate` | Instructor |
+| `POST` | `/api/instructors/{instructorId}/sessions/{sessionId}/attendance/activate/{round}` | Instructor |
+| `POST` | `/api/instructors/{instructorId}/sessions/{sessionId}/attendance/deactivate/{round}` | Instructor |
 | `POST` | `/api/instructors/{instructorId}/sessions/{sessionId}/qr-token` | Instructor |
 | `GET` | `/api/instructors/{instructorId}/sessions/{sessionId}/attendance` | Instructor |
 | `GET` | `/api/instructors/{instructorId}/sessions/{sessionId}/attendance/summary` | Instructor |

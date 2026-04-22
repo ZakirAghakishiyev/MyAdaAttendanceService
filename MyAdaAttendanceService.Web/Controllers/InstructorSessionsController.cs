@@ -15,20 +15,26 @@ public class InstructorSessionsController : ApiControllerBase
         _attendanceService = attendanceService;
     }
 
-    [HttpPost("{sessionId:int}/attendance/activate")]
-    public Task<IActionResult> ActivateAttendance(Guid instructorId, int sessionId) =>
+    [HttpPost("{sessionId:int}/attendance/activate/{round:int}")]
+    public Task<IActionResult> ActivateAttendanceForRound(
+        Guid instructorId,
+        int sessionId,
+        int round) =>
         HandleAsync(async () =>
         {
             EnsureRouteUserMatchesClaim(instructorId);
-            return await _attendanceService.ActivateAttendanceAsync(instructorId, sessionId);
+            return await _attendanceService.ActivateAttendanceForRoundAsync(instructorId, sessionId, round);
         });
 
-    [HttpPost("{sessionId:int}/attendance/deactivate")]
-    public Task<IActionResult> DeactivateAttendance(Guid instructorId, int sessionId) =>
+    [HttpPost("{sessionId:int}/attendance/deactivate/{round:int}")]
+    public Task<IActionResult> DeactivateAttendanceForRound(
+        Guid instructorId,
+        int sessionId,
+        int round) =>
         HandleAsync(async () =>
         {
             EnsureRouteUserMatchesClaim(instructorId);
-            return await _attendanceService.DeactivateAttendanceAsync(instructorId, sessionId);
+            return await _attendanceService.DeactivateAttendanceForRoundAsync(instructorId, sessionId, round);
         });
 
     [HttpPost("{sessionId:int}/qr-token")]

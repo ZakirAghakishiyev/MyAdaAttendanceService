@@ -16,6 +16,9 @@ public class AttendanceScanLog
     [Range(0, int.MaxValue)]
     public int ActivationId { get; set; }
 
+    /// <summary>1 or 2 when accepted; set when a JWT was parsed.</summary>
+    public byte? Round { get; set; }
+
     [Required]
     [StringLength(128)]
     public string TokenJti { get; set; } = string.Empty;

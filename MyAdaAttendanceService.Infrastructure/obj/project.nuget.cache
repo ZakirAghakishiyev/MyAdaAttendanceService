@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "2feyfpbJZcY=",
+  "dgSpecHash": "ufMthtVNTKU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
+  "projectFilePath": "c:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\User\\.nuget\\packages\\automapper\\12.0.0\\automapper.12.0.0.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.0\\automapper.extensions.microsoft.dependencyinjection.12.0.0.nupkg.sha512",
@@ -54,9 +54,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'AutoMapper' 12.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-rvv3-g6hj-g44x",
-      "projectPath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
+      "projectPath": "c:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
+      "filePath": "c:\\Users\\User\\source\\repos\\MyAdaAttendanceService\\MyAdaAttendanceService.Infrastructure\\MyAdaAttendanceService.Infrastructure.csproj",
       "libraryId": "AutoMapper",
       "targetGraphs": [
         "net8.0"

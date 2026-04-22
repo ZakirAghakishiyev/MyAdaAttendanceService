@@ -30,40 +30,40 @@ public class InstructorSessionsControllerTests
     }
 
     [Fact]
-    public async Task ActivateAttendance_ReturnsOk_OnSuccess()
+    public async Task ActivateAttendanceForRound_ReturnsOk_OnSuccess()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.ActivateAttendanceAsync(InstructorId, 5))
-            .ReturnsAsync(new AttendanceActivationResultDto { SessionId = 5, IsAttendanceActive = true });
+        svc.Setup(x => x.ActivateAttendanceForRoundAsync(InstructorId, 5, 1))
+            .ReturnsAsync(new AttendanceActivationResultDto { SessionId = 5, IsAttendanceActive = true, Round = 1 });
 
         var controller = CreateController(svc.Object);
-        var response = await controller.ActivateAttendance(InstructorId, 5);
+        var response = await controller.ActivateAttendanceForRound(InstructorId, 5, 1);
 
         Assert.IsType<OkObjectResult>(response);
     }
 
     [Fact]
-    public async Task ActivateAttendance_ReturnsUnauthorized_WhenServiceThrows()
+    public async Task ActivateAttendanceForRound_ReturnsUnauthorized_WhenServiceThrows()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.ActivateAttendanceAsync(InstructorId, 5))
+        svc.Setup(x => x.ActivateAttendanceForRoundAsync(InstructorId, 5, 1))
             .ThrowsAsync(new UnauthorizedAccessException("nope"));
 
         var controller = CreateController(svc.Object);
-        var response = await controller.ActivateAttendance(InstructorId, 5);
+        var response = await controller.ActivateAttendanceForRound(InstructorId, 5, 1);
 
         Assert.IsType<UnauthorizedObjectResult>(response);
     }
 
     [Fact]
-    public async Task DeactivateAttendance_ReturnsBadRequest_WhenServiceThrowsArgumentException()
+    public async Task DeactivateAttendanceForRound_ReturnsBadRequest_WhenServiceThrowsArgumentException()
     {
         var svc = new Mock<IAttendanceService>();
-        svc.Setup(x => x.DeactivateAttendanceAsync(InstructorId, 5))
+        svc.Setup(x => x.DeactivateAttendanceForRoundAsync(InstructorId, 5, 1))
             .ThrowsAsync(new ArgumentException("bad"));
 
         var controller = CreateController(svc.Object);
-        var response = await controller.DeactivateAttendance(InstructorId, 5);
+        var response = await controller.DeactivateAttendanceForRound(InstructorId, 5, 1);
 
         Assert.IsType<BadRequestObjectResult>(response);
     }
@@ -73,7 +73,7 @@ public class InstructorSessionsControllerTests
     {
         var svc = new Mock<IAttendanceService>();
         svc.Setup(x => x.IssueQrTokenAsync(InstructorId, 5))
-            .ReturnsAsync(new QrTokenResponseDto { SessionId = 5, Token = "t" });
+            .ReturnsAsync(new QrTokenResponseDto { SessionId = 5, Token = "t", Round = 1 });
 
         var controller = CreateController(svc.Object);
         var response = await controller.IssueQrToken(InstructorId, 5);

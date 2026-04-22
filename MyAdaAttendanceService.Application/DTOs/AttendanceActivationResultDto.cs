@@ -3,6 +3,8 @@
 public class AttendanceActivationResultDto
 {
     public int SessionId { get; set; }
+
+    public byte? Round { get; set; }
     public bool IsAttendanceActive { get; set; }
     public DateTime? AttendanceActivatedAt { get; set; }
     public DateTime? AttendanceDeactivatedAt { get; set; }
