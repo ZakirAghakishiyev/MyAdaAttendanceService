@@ -46,4 +46,9 @@ public class StudentController : ApiControllerBase
             EnsureAuthenticatedUserMatches(dto.StudentId);
             return await _attendanceService.MarkAttendanceByQrAsync(dto);
         });
+
+    // Alias for clients still using /attendance/qr/scan
+    [HttpPost("attendance/qr/scan")]
+    public Task<IActionResult> ScanAttendanceQr(Guid studentId, [FromBody] QrScanRequestDto dto) =>
+        ScanAttendance(studentId, dto);
 }

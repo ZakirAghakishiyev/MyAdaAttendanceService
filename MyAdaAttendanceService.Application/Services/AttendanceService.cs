@@ -207,23 +207,23 @@ public class AttendanceService : IAttendanceService
         var studentId = dto.StudentId;
         var scannedAt = DateTime.UtcNow;
         if (studentId == Guid.Empty)
-            return await RejectScanAsync(studentId, scannedAt, "student_id_missing", null, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "student_id_missing", null, null);
 
         var (jwtPortion, appendedStudentId) = ParseBoundStudentFromToken(dto.Token);
         if (string.IsNullOrWhiteSpace(jwtPortion))
-            return await RejectScanAsync(studentId, scannedAt, "token_missing", null, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "token_missing", null, null);
         if (appendedStudentId is { } appId && appId != studentId)
-            return await RejectScanAsync(studentId, scannedAt, "student_token_mismatch", null, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "student_token_mismatch", null, null);
 
         if (!TryValidateQrJwt(jwtPortion, out var tokenPayload, out var rejectReason))
-            return await RejectScanAsync(studentId, scannedAt, rejectReason ?? "invalid_token", null, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, rejectReason ?? "invalid_token", null, null);
 
         var session = await _sessionRepository.GetByIdWithLessonAsync(tokenPayload!.SessionId);
         if (session is null)
-            return await RejectScanAsync(studentId, scannedAt, "session_not_found", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "session_not_found", tokenPayload, null);
 
         if (session.Lesson!.InstructorId != tokenPayload.InstructorId)
-            return await RejectScanAsync(studentId, scannedAt, "instructor_mismatch", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "instructor_mismatch", tokenPayload, null);
 
         var activation = await _activationRepository.GetByIdAsync(tokenPayload.ActivationId);
         if (activation is null
@@ -231,24 +231,24 @@ public class AttendanceService : IAttendanceService
             || activation.SessionId != tokenPayload.SessionId
             || activation.Round != tokenPayload.Round)
         {
-            return await RejectScanAsync(studentId, scannedAt, "activation_inactive", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "activation_inactive", tokenPayload, null);
         }
 
         var sessionStart = session.Date.ToDateTime(session.StartTime);
         var sessionEnd = session.Date.ToDateTime(session.EndTime);
         if (scannedAt < sessionStart.AddMinutes(-30) || scannedAt > sessionEnd.AddMinutes(30))
-            return await RejectScanAsync(studentId, scannedAt, "outside_attendance_window", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "outside_attendance_window", tokenPayload, null);
 
         var isEnrolled = await _enrollmentRepository.ExistsAsync(session.LessonId, studentId);
         if (!isEnrolled)
-            return await RejectScanAsync(studentId, scannedAt, "student_not_enrolled", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "student_not_enrolled", tokenPayload, null);
 
         if (await _scanLogRepository.HasAcceptedScanInRoundAsync(
                 tokenPayload.SessionId,
                 studentId,
                 tokenPayload.Round))
         {
-            return await RejectScanAsync(studentId, scannedAt, "already_scanned_this_round", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "already_scanned_this_round", tokenPayload, null);
         }
 
         var alreadyUsedJti = await _scanLogRepository.ExistsAcceptedByTokenAsync(
@@ -256,7 +256,7 @@ public class AttendanceService : IAttendanceService
             studentId,
             tokenPayload.Jti);
         if (alreadyUsedJti)
-            return await RejectScanAsync(studentId, scannedAt, "replay_token", tokenPayload, dto.DeviceInfo);
+            return await RejectScanAsync(studentId, scannedAt, "replay_token", tokenPayload, null);
 
         await _scanLogRepository.AddAsync(new AttendanceScanLog
         {
@@ -268,7 +268,7 @@ public class AttendanceService : IAttendanceService
             ScannedAt = scannedAt,
             Accepted = true,
             IpAddress = null,
-            DeviceInfo = dto.DeviceInfo
+            DeviceInfo = null
         });
 
         var distinctRounds = await _scanLogRepository.CountDistinctRoundsScannedAsync(tokenPayload.SessionId, studentId);

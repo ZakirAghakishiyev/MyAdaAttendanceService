@@ -64,6 +64,10 @@ Student’s **per-session** attendance rows for one lesson.
 
 Validates the **QR JWT** and records a scan for `studentId` (auth-service user **GUID** in the route). If body `studentId` is empty, the route `studentId` is used.
 
+### `POST /api/students/{studentId}/attendance/qr/scan` (alias)
+
+Alias for `POST /api/students/{studentId}/attendance/scan`. Same request/response.
+
 **Eligibility:** only students **enrolled in the session’s lesson** can scan successfully (`errorCode`: `student_not_enrolled` otherwise).
 
 **Body — `QrScanRequestDto`:**
@@ -72,7 +76,6 @@ Validates the **QR JWT** and records a scan for `studentId` (auth-service user *
 |---------------|---------|--------------------------|
 | `studentId`   | guid    | Route id is used when omitted in body |
 | `token`       | string  | See below |
-| `deviceInfo`  | string? | Optional client metadata |
 
 **`token` field**
 
